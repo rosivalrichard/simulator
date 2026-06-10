@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hubár — lesná zberateľská hra</title>
+<style>
+  :root{
+    --les:#16301f;          /* hlboká smreková */
+    --mach:#3f6234;         /* machová zelená */
+    --hlina:#5d4126;        /* lesná pôda */
+    --okra:#c98a3b;         /* hríbová okrová */
+    --papier:#f3ead4;       /* strana atlasu */
+    --atrament:#2b2417;     /* atramentové písmo */
+    --mucho:#b8372b;        /* muchotrávková červená */
+    --zlata:#e0b34a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--les);
+    font-family:Georgia,'Times New Roman',serif;color:var(--papier)}
+  #game{position:fixed;inset:0;touch-action:none;display:block}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;
+    padding:10px 12px;pointer-events:none;z-index:20;
+    background:linear-gradient(180deg,rgba(10,20,12,.85),rgba(10,20,12,0));}
+  .pill{pointer-events:auto;background:rgba(22,48,31,.88);border:1px solid rgba(243,234,212,.25);
+    border-radius:999px;padding:6px 12px;font-size:14px;display:flex;align-items:center;gap:6px;
+    white-space:nowrap}
+  #xpwrap{flex:1;min-width:90px;pointer-events:none}
+  #xpbar{height:8px;border-radius:99px;background:rgba(243,234,212,.18);overflow:hidden;margin-top:3px}
+  #xpfill{height:100%;width:0%;background:linear-gradient(90deg,var(--okra),var(--zlata));transition:width .4s}
+  #lvltxt{font-size:12px;letter-spacing:.04em;opacity:.9}
+
+  /* ---------- spodné tlačidlá ---------- */
+  #bottombar{position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;justify-content:center;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));z-index:20;
+    background:linear-gradient(0deg,rgba(10,20,12,.85),rgba(10,20,12,0));}
+  button{font-family:inherit;cursor:pointer}
+  .btn{background:var(--okra);color:var(--atrament);border:none;border-radius:12px;
+    padding:11px 16px;font-size:15px;font-weight:bold;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .btn.ghost{background:rgba(243,234,212,.14);color:var(--papier);border:1px solid rgba(243,234,212,.3)}
+
+  /* ---------- modálne okná ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(8,14,9,.72);z-index:40;display:flex;
+    align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(2px)}
+  .hidden{display:none!important}
+  .card{background:var(--papier);color:var(--atrament);border-radius:6px;max-width:430px;width:100%;
+    max-height:88vh;overflow-y:auto;padding:18px 18px 16px;position:relative;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(43,36,23,.05) 28px)}
+  .card::before{content:"";position:absolute;inset:6px;border:1px solid rgba(43,36,23,.35);
+    border-radius:3px;pointer-events:none}
+  .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65;text-align:center}
+  .card h2{font-size:23px;text-align:center;margin:2px 0 0;font-style:italic}
+  .latin{text-align:center;font-size:13px;opacity:.6;font-style:italic;margin-bottom:6px}
+  .traits{margin:10px 4px;font-size:14.5px;line-height:1.45}
+  .traits div{display:flex;gap:8px;margin:5px 0;align-items:baseline}
+  .traits b{min-width:64px;display:inline-block;font-style:italic;font-weight:normal;opacity:.7}
+  .chip{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.3);
+    vertical-align:-1px;margin-right:4px}
+  .cardbtns{display:flex;gap:10px;margin-top:12px}
+  .cardbtns .btn{flex:1}
+  .btn.danger{background:var(--mucho);color:var(--papier)}
+  .btn.green{background:var(--mach);color:var(--papier)}
+  #inspectCanvas,#cleanCanvas{display:block;margin:6px auto;background:radial-gradient(circle at 50% 65%,#e7dcbe,#d8caa5);
+    border-radius:4px;border:1px solid rgba(43,36,23,.25)}
+  .hintline{text-align:center;font-size:13px;opacity:.75;margin-top:4px}
+
+  /* trh */
+  .mrow{display:flex;justify-content:space-between;align-items:center;padding:7px 4px;
+    border-bottom:1px dashed rgba(43,36,23,.3);font-size:14.5px;gap:8px}
+  .mrow .nm{flex:1}
+  .price{font-weight:bold;white-space:nowrap}
+  .dirty{font-size:11px;color:#8a5b22}
+  .shoprow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 4px;
+    border-bottom:1px dashed rgba(43,36,23,.3);font-size:14px}
+  .shoprow small{display:block;opacity:.65;font-size:12px;margin-top:1px}
+  .buy{background:var(--mach);color:var(--papier);border:none;border-radius:8px;padding:7px 12px;
+    font-weight:bold;font-size:13px;white-space:nowrap}
+  .buy:disabled{opacity:.4}
+  .owned{font-size:12px;color:var(--mach);font-weight:bold;white-space:nowrap}
+
+  /* toasty */
+  #toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;display:flex;
+    flex-direction:column;gap:8px;width:min(92vw,400px);pointer-events:none}
+  .toast{background:rgba(22,48,31,.95);border-left:4px solid var(--okra);color:var(--papier);
+    border-radius:8px;padding:10px 13px;font-size:14px;line-height:1.4;
+    animation:tin .25s ease,tout .4s ease 4.3s forwards;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .toast.bad{border-left-color:var(--mucho)}
+  .toast.gold{border-left-color:var(--zlata)}
+  @keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
+  @keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+
+  /* terrain picker / menu */
+  .terr{display:flex;gap:10px;align-items:center;width:100%;text-align:left;
+    background:rgba(43,36,23,.06);border:1px solid rgba(43,36,23,.3);border-radius:8px;
+    padding:11px 12px;margin:7px 0;font-family:inherit;font-size:15px;color:var(--atrament)}
+  .terr:disabled{opacity:.45}
+  .terr .ico{font-size:24px}
+  .terr small{display:block;font-size:12px;opacity:.65;margin-top:1px}
+  .lock{margin-left:auto;font-size:12px;font-weight:bold;color:var(--mucho);white-space:nowrap}
+
+  /* atlas */
+  .arow{display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px dashed rgba(43,36,23,.3)}
+  .arow canvas{flex:none}
+  .arow .ainfo{font-size:13.5px;line-height:1.35}
+  .tag{display:inline-block;font-size:10.5px;font-weight:bold;letter-spacing:.05em;border-radius:4px;
+    padding:1px 6px;color:var(--papier);vertical-align:1px;margin-left:5px}
+  .tag.top{background:var(--zlata);color:var(--atrament)}
+  .tag.ed{background:var(--mach)}
+  .tag.ined{background:#8a6a2a}
+  .tag.tox{background:var(--mucho)}
+  .closex{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;
+    color:var(--atrament);opacity:.6;z-index:2}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="pill" id="xpwrap" style="flex-direction:column;align-items:stretch">
+    <span id="lvltxt">Hubár · Lv 1</span>
+    <div id="xpbar"><div id="xpfill"></div></div>
+  </div>
+  <div class="pill">💶 <span id="money">0</span> €</div>
+  <div class="pill">🧺 <span id="basketCnt">0</span>/<span id="basketMax">8</span></div>
+</div>
+
+<div id="bottombar">
+  <button class="btn ghost" id="btnMenu">🌲 Les</button>
+  <button class="btn ghost" id="btnAtlas">📖 Atlas</button>
+  <button class="btn ghost" id="btnDeeper">🥾 Hlbšie</button>
+  <button class="btn" id="btnMarket">🏪 Trh</button>
+</div>
+
+<div id="toasts"></div>
+
+<!-- ATLASOVÁ KARTA HUBY -->
+<div class="overlay hidden" id="inspectOv">
+  <div class="card">
+    <div class="eyebrow">Strana z hubárskeho atlasu</div>
+    <h2 id="insName">?</h2>
+    <div class="latin" id="insLatin"></div>
+    <canvas id="inspectCanvas" width="240" height="190"></canvas>
+    <div class="traits" id="insTraits"></div>
+    <div class="hintline" id="insHint"></div>
+    <div class="cardbtns">
+      <button class="btn ghost" id="btnLeave" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Nechať rásť</button>
+      <button class="btn green" id="btnPick">Odrezať ✂️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ČISTENIE -->
+<div class="overlay hidden" id="cleanOv">
+  <div class="card">
+    <div class="eyebrow">Očisti hubu od hliny a ihličia</div>
+    <h2 id="cleanName" style="font-size:19px"></h2>
+    <canvas id="cleanCanvas" width="240" height="190"></canvas>
+    <div class="hintline" id="cleanHint">Ťukaj na špinu. Čistá huba má na trhu plnú cenu.</div>
+    <div class="cardbtns">
+      <button class="btn ghost" id="btnSkipClean" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Hodiť do košíka špinavú</button>
+      <button class="btn green hidden" id="btnDoneClean">Do košíka 🧺</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRH -->
+<div class="overlay hidden" id="marketOv">
+  <div class="card">
+    <button class="closex" data-close="marketOv">✕</button>
+    <div class="eyebrow">Žilinská tržnica</div>
+    <h2>Výkup húb</h2>
+    <div id="marketList"></div>
+    <div class="mrow" style="border-bottom:none;font-size:16px"><span class="nm"><b>Spolu</b></span>
+      <span class="price" id="marketTotal">0,00 €</span></div>
+    <div class="cardbtns"><button class="btn green" id="btnSellAll">Predať všetko</button></div>
+    <div class="eyebrow" style="margin-top:16px">Hubárske potreby</div>
+    <div id="shopList"></div>
+  </div>
+</div>
+
+<!-- VÝBER LESA -->
+<div class="overlay hidden" id="menuOv">
+  <div class="card">
+    <button class="closex" data-close="menuOv">✕</button>
+    <div class="eyebrow">Kam na huby?</div>
+    <h2>Vyber si les</h2>
+    <div id="terrList"></div>
+    <div class="hintline">Každý les má iné druhy. Vyššie levely odomykajú vzácnejšie miesta.</div>
+  </div>
+</div>
+
+<!-- ATLAS -->
+<div class="overlay hidden" id="atlasOv">
+  <div class="card">
+    <button class="closex" data-close="atlasOv">✕</button>
+    <div class="eyebrow">Hubársky atlas</div>
+    <h2 id="atlasTitle">Atlas húb</h2>
+    <div id="atlasList"></div>
+  </div>
+</div>
+
+<!-- ÚVOD -->
+<div class="overlay" id="introOv">
+  <div class="card">
+    <div class="eyebrow">Lesná zberateľská hra</div>
+    <h2>Hubár</h2>
+    <div class="traits" style="margin-top:10px">
+      <div>🥾&nbsp; Ťukni do lesa a hubár tam dôjde. Ťukni na hubu a obzrie si ju zblízka.</div>
+      <div>🔍&nbsp; Pred odrezaním si všímaj <b style="min-width:auto">znaky</b>: klobúk, spodok, hlúbik, prsteň, pošvu.</div>
+      <div>⚠️&nbsp; Jedovatá alebo nejedlá huba v košíku = strata XP. Niektoré jedlé huby majú nebezpečných dvojníkov!</div>
+      <div>🧺&nbsp; Nazbierané huby očisti a predaj na trhu. Za peniaze si kúp lepšiu výbavu.</div>
+    </div>
+    <div class="cardbtns"><button class="btn green" id="btnStart">Vyraziť do lesa 🌲</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================
+   DÁTA — druhy húb (reálne slovenské druhy)
+   type: top / edible / inedible / toxic
+   price = € za čistý kus na trhu
+===================================================== */
+const SPECIES = [
+ {id:"hrib_smrekovy", name:"Hríb smrekový", latin:"Boletus edulis", type:"top", price:3.8, xp:25,
+  terr:["smrek","prales"],
+  draw:{cap:"#7a4a22",capEdge:"#9c6b3a",shape:"bun",stem:"#e8dcc2",stemBulb:true,net:"#d8c9a8",under:"#e9e2c4"},
+  traits:[["Klobúk","hnedý, vypuklý ako žemľa","#7a4a22"],["Spodok","rúrky — mladé biele, neskôr žltozelené","#e9e2c4"],["Hlúbik","svetlý, bruchatý, s jemnou svetlou sieťkou","#e8dcc2"]],
+  hint:"Pozor na dvojníka: hríb žlčový má ružovkasté rúrky a tmavú sieťku."},
+
+ {id:"hrib_dubovy", name:"Hríb dubový", latin:"Boletus reticulatus", type:"top", price:3.8, xp:25,
+  terr:["dub","prales"],
+  draw:{cap:"#8a6a42",capEdge:"#a98a5c",shape:"bun",stem:"#dccfae",stemBulb:true,net:"#b9a87f",under:"#e9e2c4"},
+  traits:[["Klobúk","svetlohnedý, matný, jemne rozpukaný","#8a6a42"],["Spodok","rúrky — biele až žltkasté","#e9e2c4"],["Hlúbik","s výraznou sieťkou po celej dĺžke","#dccfae"]],
+  hint:"Rastie pod dubmi už od jari. Dvojník: hríb žlčový."},
+
+ {id:"kuriatko", name:"Kuriatko jedlé", latin:"Cantharellus cibarius", type:"edible", price:1.6, xp:12,
+  terr:["smrek","dub","prales"],
+  draw:{cap:"#e8a93c",capEdge:"#f0bd5e",shape:"funnel",stem:"#e3a73e",under:"#eebd62",ridges:true},
+  traits:[["Klobúk","žltý, lievikovitý, zvlnený okraj","#e8a93c"],["Spodok","hrubé zbiehavé lišty (nie pravé lupene)","#eebd62"],["Vôňa","príjemne ovocná, po marhuliach",null]],
+  hint:"Dvojník: líška oranžová — má tenké husté lupene a rastie na dreve/ihličí."},
+
+ {id:"bedla", name:"Bedľa vysoká", latin:"Macrolepiota procera", type:"edible", price:2.0, xp:15,
+  terr:["dub","prales","breza"],
+  draw:{cap:"#cdb48f",capEdge:"#e3d7bd",shape:"parasol",stem:"#cba98a",scales:"#7a5a36",ring:true,under:"#f0ead6"},
+  traits:[["Klobúk","veľký „dáždnik“ s hnedými šupinami","#cdb48f"],["Spodok","biele voľné lupene","#f0ead6"],["Hlúbik","vysoký, hadovito strakatý, posuvný prsteň","#cba98a"]],
+  hint:"Mladú zatvorenú bedľu si nemýľ s muchotrávkou — bedľa nemá pošvu na báze!"},
+
+ {id:"kozak", name:"Kozák brezový", latin:"Leccinum scabrum", type:"edible", price:1.2, xp:10,
+  terr:["breza","prales"],
+  draw:{cap:"#6e5236",capEdge:"#856648",shape:"bun",stem:"#e6e0cf",speckles:"#3a3228",under:"#ded8c0"},
+  traits:[["Klobúk","sivohnedý, polguľovitý","#6e5236"],["Spodok","rúrky — špinavobiele","#ded8c0"],["Hlúbik","štíhly, biely s čiernymi šupinkami","#e6e0cf"]],
+  hint:"Verný spoločník briez. Kvalitná jedlá huba."},
+
+ {id:"masliak", name:"Masliak obyčajný", latin:"Suillus luteus", type:"edible", price:0.9, xp:8,
+  terr:["smrek"],
+  draw:{cap:"#5e3d1e",capEdge:"#7a5530",shape:"bun",gloss:true,stem:"#e4d9b8",ring:true,under:"#e8d27a"},
+  traits:[["Klobúk","čokoládový, v mokru slizký a lesklý","#5e3d1e"],["Spodok","rúrky — citrónovo žlté","#e8d27a"],["Hlúbik","s blanitým prsteňom","#e4d9b8"]],
+  hint:"Šupku z klobúka pred varením stiahni."},
+
+ {id:"suchohrib", name:"Suchohríb hnedý", latin:"Imleria badia", type:"edible", price:1.1, xp:10,
+  terr:["smrek","prales"],
+  draw:{cap:"#5a3a24",capEdge:"#74543a",shape:"bun",stem:"#c8ab7e",under:"#dde0a8",bruise:true},
+  traits:[["Klobúk","gaštanovohnedý, zamatový","#5a3a24"],["Spodok","rúrky žltkasté, po stlačení modrejú","#dde0a8"],["Hlúbik","hnedastý, bez sieťky","#c8ab7e"]],
+  hint:"Modranie po dotyku je tu normálne — nezľakni sa."},
+
+ {id:"horciak", name:"Hríb žlčový (horčiak)", latin:"Tylopilus felleus", type:"inedible", price:0, xp:-10,
+  terr:["smrek","prales","dub"],
+  draw:{cap:"#7c5a36",capEdge:"#97744c",shape:"bun",stem:"#cfc0a0",net:"#5e4a30",under:"#e3c6c0"},
+  traits:[["Klobúk","hnedý — na nerozoznanie od pravého hríba","#7c5a36"],["Spodok","rúrky s <b>ružovkastým</b> nádychom","#e3c6c0"],["Hlúbik","<b>tmavá hrubá sieťka</b>","#cfc0a0"]],
+  hint:"Dvojník hríba smrekového. Nie je jedovatý, ale horkosťou pokazí celé jedlo.",
+  warn:"Horčiak! Ružové rúrky a tmavá sieťka ťa mali varovať. Celý guláš by zhorkol."},
+
+ {id:"liska_or", name:"Líška oranžová", latin:"Hygrophoropsis aurantiaca", type:"inedible", price:0, xp:-8,
+  terr:["smrek","breza","prales"],
+  draw:{cap:"#d97f2e",capEdge:"#e89a4a",shape:"funnel",stem:"#c97a30",under:"#e08838",gills:true},
+  traits:[["Klobúk","oranžový, lievikovitý","#d97f2e"],["Spodok","<b>tenké husté pravé lupene</b>","#e08838"],["Rastie","na ihličí a tlejúcom dreve",null]],
+  hint:"Dvojník kuriatka. Kuriatko má hrubé lišty, líška tenké lupene.",
+  warn:"To nebolo kuriatko, ale líška oranžová — tenké lupene ju prezradili."},
+
+ {id:"mucho_cervena", name:"Muchotrávka červená", latin:"Amanita muscaria", type:"toxic", price:0, xp:-25,
+  terr:["breza","smrek","prales"],
+  draw:{cap:"#c0392b",capEdge:"#d6543f",shape:"bun",dots:"#f6f0e0",stem:"#f0ead8",ring:true,volva:true,under:"#f0ead6"},
+  traits:[["Klobúk","červený s bielymi bodkami","#c0392b"],["Spodok","biele lupene","#f0ead6"],["Hlúbik","biely, prsteň aj hľuznatá báza","#f0ead8"]],
+  hint:"Krásna, ale jedovatá. V hre aj v živote: nechaj ju lesu.",
+  warn:"Muchotrávka červená je jedovatá — spôsobuje nevoľnosť a halucinácie."},
+
+ {id:"mucho_zelena", name:"Muchotrávka zelená", latin:"Amanita phalloides", type:"toxic", price:0, xp:-60,
+  terr:["dub","prales"],
+  draw:{cap:"#8a9a4e",capEdge:"#a8b56a",shape:"bun",stem:"#eef0e0",ring:true,volva:true,under:"#f2f2e4"},
+  traits:[["Klobúk","olivovo zelenkastý, hodvábny","#8a9a4e"],["Spodok","<b>čisto biele</b> lupene","#f2f2e4"],["Hlúbik","biely, prsteň a <b>blanitá pošva</b> v zemi","#eef0e0"]],
+  hint:"Najnebezpečnejšia huba Európy. Pošva býva skrytá v zemi — hubu vždy vyberaj celú.",
+  warn:"MUCHOTRÁVKA ZELENÁ — smrteľne jedovatá! Biele lupene + prsteň + pošva. Pol klobúka dokáže zabiť."},
+
+ {id:"mucho_tigrovana", name:"Muchotrávka tigrovaná", latin:"Amanita pantherina", type:"toxic", price:0, xp:-40,
+  terr:["smrek","dub","prales"],
+  draw:{cap:"#6e5a40",capEdge:"#86745a",dots:"#f2ecd8",shape:"bun",stem:"#efe9d6",ring:true,volva:true,under:"#f0ead6"},
+  traits:[["Klobúk","hnedý s bielymi „krupicovými“ bodkami","#6e5a40"],["Spodok","biele lupene","#f0ead6"],["Hlúbik","biely, prsteň, golierikovitá pošva","#efe9d6"]],
+  hint:"Silne jedovatá. Bodkovaný hnedý klobúk + biele lupene = ruky preč.",
+  warn:"Muchotrávka tigrovaná — silne jedovatá, poškodzuje nervový systém."}
+];
+const SP = Object.fromEntries(SPECIES.map(s=>[s.id,s]));
+
+const TERRAINS = {
+ smrek:{name:"Smrekový les", ico:"🌲", lvl:1, ground:["#2a4427","#243b22"], desc:"Hríby smrekové, masliaky, kuriatka… a horčiaky.",
+        trees:"spruce", light:"#dff0c8"},
+ dub:  {name:"Dubina", ico:"🌳", lvl:3, ground:["#3a4a26","#324022"], desc:"Hríby dubové a bedle. Pozor na muchotrávku zelenú!",
+        trees:"oak", light:"#e8f0c0"},
+ breza:{name:"Brezový háj", ico:"🍃", lvl:4, ground:["#41522c","#384726"], desc:"Kozáky brezové a červené muchotrávky.",
+        trees:"birch", light:"#f0f5cc"},
+ prales:{name:"Zmiešaný prales", ico:"🌲🌳", lvl:6, ground:["#22381f","#1c301a"], desc:"Najbohatší les — rastie tu všetko.",
+        trees:"mixed", light:"#d8ecc4"}
+};
+
+/* =====================================================
+   STAV
+===================================================== */
+const profile = { xp:0, money:0, up:{knife:false,atlas:false,boots:false,basket:0}, best:{} };
+let terrain = "smrek";
+const WORLD = {w:1700, h:1300};
+const player = {x:WORLD.w/2, y:WORLD.h-160, tx:null, ty:null, dir:1, walking:0, autoOpen:null};
+let trees=[], shrooms=[], basket=[];
+let camX=0, camY=0;
+let currentInspect=null, currentClean=null;
+
+const LV = x=>Math.floor(Math.sqrt(x/40))+1;
+const lvlBase = l=>40*(l-1)*(l-1);
+const basketMax = ()=>[8,12,18][profile.up.basket];
+
+/* =====================================================
+   ULOŽENIE (artifact storage, s fallbackom)
+===================================================== */
+async function save(){ try{ if(window.storage) await window.storage.set("hubar-profil", JSON.stringify(profile)); }catch(e){} }
+async function load(){ try{ if(window.storage){ const r=await window.storage.get("hubar-profil");
+  if(r&&r.value){ const p=JSON.parse(r.value); Object.assign(profile,p); profile.up=Object.assign({knife:false,atlas:false,boots:false,basket:0},p.up); } } }catch(e){} }
+
+/* =====================================================
+   GENEROVANIE LESA
+===================================================== */
+function rnd(a,b){return a+Math.random()*(b-a)}
+function genForest(){
+  trees=[]; shrooms=[]; player.autoOpen=null;
+  const t=TERRAINS[terrain];
+  const n= t.trees==="mixed"?46:40;
+  for(let i=0;i<n;i++){
+    let kind=t.trees;
+    if(kind==="mixed") kind=["spruce","oak","birch"][Math.floor(Math.random()*3)];
+    trees.push({x:rnd(60,WORLD.w-60), y:rnd(90,WORLD.h-140), s:rnd(.8,1.35), kind});
+  }
+  trees.sort((a,b)=>a.y-b.y);
+  // huby pri stromoch
+  const pool = SPECIES.filter(s=>s.terr.includes(terrain));
+  const weights = pool.map(s=> s.type==="top"?0.9 : s.type==="edible"?1.4 : s.type==="inedible"?0.8 : 0.75);
+  const total = weights.reduce((a,b)=>a+b,0);
+  const cnt = 15+Math.floor(Math.random()*4);
+  for(let i=0;i<cnt;i++){
+    let r=Math.random()*total, sp=pool[0];
+    for(let j=0;j<pool.length;j++){ r-=weights[j]; if(r<=0){sp=pool[j];break} }
+    const tr = trees[Math.floor(Math.random()*trees.length)];
+    const ang=Math.random()*Math.PI*2, d=rnd(34,80);
+    let x=tr.x+Math.cos(ang)*d, y=tr.y+Math.sin(ang)*d*0.7+14;
+    x=Math.max(40,Math.min(WORLD.w-40,x)); y=Math.max(120,Math.min(WORLD.h-60,y));
+    shrooms.push({x,y,sp,picked:false,seenBonus:false,s:rnd(.85,1.15)});
+  }
+  player.x=WORLD.w/2; player.y=WORLD.h-160; player.tx=player.ty=null;
+}
+
+/* =====================================================
+   KRESLENIE HÚB (zdieľané: svet, atlas, čistenie)
+===================================================== */
+function drawMushroom(c,x,y,s,d,opts={}){
+  c.save(); c.translate(x,y); c.scale(s,s);
+  // tieň
+  c.fillStyle="rgba(0,0,0,.18)"; c.beginPath(); c.ellipse(0,2,14,4,0,0,7); c.fill();
+  // pošva
+  if(d.volva){ c.fillStyle="#ddd5be"; c.beginPath(); c.ellipse(0,0,7,5,0,0,7); c.fill(); }
+  // hlúbik
+  c.fillStyle=d.stem||"#e8dcc2";
+  const sw=d.stemBulb?6.5:4.5;
+  c.beginPath();
+  c.moveTo(-4,-2); c.quadraticCurveTo(-sw,-12,-3.6,-22);
+  c.lineTo(3.6,-22); c.quadraticCurveTo(sw,-12,4,-2); c.closePath(); c.fill();
+  if(d.net){ c.strokeStyle=d.net; c.lineWidth=.6;
+    for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-4+i*2.4,-4); c.lineTo(-2+i*2.2,-20); c.stroke(); }
+    for(let i=0;i<3;i++){ c.beginPath(); c.moveTo(-4.5,-6-i*5); c.quadraticCurveTo(0,-4-i*5,4.5,-6-i*5); c.stroke(); } }
+  if(d.speckles){ c.fillStyle=d.speckles;
+    for(let i=0;i<10;i++){ c.fillRect(-3.5+ (i%4)*2.2, -5-Math.floor(i/4)*5.5, 1.1, 1.6);} }
+  if(d.ring){ c.strokeStyle="rgba(120,100,70,.8)"; c.lineWidth=2;
+    c.beginPath(); c.ellipse(0,-15,5,2,0,0,7); c.stroke(); }
+  // klobúk
+  const capY=-22;
+  if(d.shape==="funnel"){
+    c.fillStyle=d.cap; c.beginPath();
+    c.moveTo(-13,capY-6); c.quadraticCurveTo(-4,capY+3,0,capY+2);
+    c.quadraticCurveTo(4,capY+3,13,capY-6);
+    c.quadraticCurveTo(6,capY-12,0,capY-11); c.quadraticCurveTo(-6,capY-12,-13,capY-6);
+    c.closePath(); c.fill();
+    if(d.ridges){ c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=.7;
+      for(let i=-3;i<=3;i++){ c.beginPath(); c.moveTo(i*1.4,capY+1); c.lineTo(i*3.4,capY-6); c.stroke(); } }
+    if(d.gills){ c.strokeStyle="rgba(120,70,20,.5)"; c.lineWidth=.45;
+      for(let i=-5;i<=5;i++){ c.beginPath(); c.moveTo(i*0.9,capY+1); c.lineTo(i*2.2,capY-5.5); c.stroke(); } }
+  } else if(d.shape==="parasol"){
+    c.fillStyle=d.under||"#f0ead6"; c.beginPath(); c.ellipse(0,capY,15,4,0,0,7); c.fill();
+    c.fillStyle=d.cap; c.beginPath();
+    c.moveTo(-15,capY); c.quadraticCurveTo(-10,capY-11,0,capY-13);
+    c.quadraticCurveTo(10,capY-11,15,capY); c.quadraticCurveTo(0,capY-4,-15,capY); c.fill();
+    c.fillStyle=d.scales||"#7a5a36";
+    [[-8,-4],[-2,-8],[5,-5],[0,-2],[9,-2],[-12,-1]].forEach(p=>{ c.beginPath(); c.ellipse(p[0],capY+p[1],1.8,1.2,0,0,7); c.fill(); });
+    c.beginPath(); c.ellipse(0,capY-11,2.6,1.8,0,0,7); c.fill();
+  } else { // bun
+    c.fillStyle=d.under||"#e9e2c4"; c.beginPath(); c.ellipse(0,capY+1,12.5,3.5,0,0,7); c.fill();
+    const g=c.createLinearGradient(0,capY-13,0,capY+2);
+    g.addColorStop(0,d.capEdge||d.cap); g.addColorStop(1,d.cap);
+    c.fillStyle=g; c.beginPath();
+    c.moveTo(-13,capY+1); c.quadraticCurveTo(-13,capY-12,0,capY-12.5);
+    c.quadraticCurveTo(13,capY-12,13,capY+1);
+    c.quadraticCurveTo(0,capY-3,-13,capY+1); c.fill();
+    if(d.gloss){ c.fillStyle="rgba(255,255,255,.25)"; c.beginPath(); c.ellipse(-4,capY-8,5,2.2,-.4,0,7); c.fill(); }
+    if(d.dots){ c.fillStyle=d.dots;
+      [[-8,-4],[-3,-9],[4,-7],[9,-3],[0,-3],[7,-9.5],[-10,-8]].forEach(p=>{ c.beginPath(); c.ellipse(p[0],capY+p[1],1.7,1.2,0,0,7); c.fill(); }); }
+  }
+  if(opts.dirt){ opts.dirt.forEach(b=>{ if(b.done)return;
+    c.fillStyle="rgba(80,58,32,.95)"; c.beginPath(); c.ellipse(b.x,b.y,b.r,b.r*.75,b.a,0,7); c.fill();
+    c.fillStyle="rgba(120,95,55,.8)"; c.beginPath(); c.ellipse(b.x-b.r*.25,b.y-b.r*.2,b.r*.5,b.r*.35,b.a,0,7); c.fill(); }); }
+  c.restore();
+}
+
+/* =====================================================
+   SVET — render
+===================================================== */
+const cv=document.getElementById("game"), cx=cv.getContext("2d");
+let DPR=1;
+function resize(){ DPR=Math.min(window.devicePixelRatio||1,2);
+  cv.width=innerWidth*DPR; cv.height=innerHeight*DPR; cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px"; }
+addEventListener("resize",resize); resize();
+
+function drawTree(c,t){
+  c.save(); c.translate(t.x,t.y); c.scale(t.s,t.s);
+  c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(0,4,20,6,0,0,7); c.fill();
+  if(t.kind==="spruce"){
+    c.fillStyle="#3a2a18"; c.fillRect(-3.5,-14,7,18);
+    const greens=["#1c3a22","#23472a","#2b5532"];
+    for(let i=0;i<3;i++){ c.fillStyle=greens[i];
+      const w=30-i*7,h=26-i*4,yy=-10-i*18;
+      c.beginPath(); c.moveTo(0,yy-h); c.lineTo(w,yy); c.lineTo(-w,yy); c.closePath(); c.fill(); }
+  } else if(t.kind==="birch"){
+    c.fillStyle="#e8e4d8"; c.fillRect(-3,-52,6,56);
+    c.fillStyle="#2b2417"; [[-3,-12],[0,-26],[-2,-40],[1,-48]].forEach(p=>c.fillRect(p[0],p[1],3,2.5));
+    c.fillStyle="#7fa04a"; c.beginPath(); c.ellipse(-8,-58,14,16,.3,0,7); c.fill();
+    c.fillStyle="#8fb055"; c.beginPath(); c.ellipse(9,-64,15,17,-.2,0,7); c.fill();
+  } else {
+    c.fillStyle="#4a3520"; c.fillRect(-4.5,-30,9,34);
+    c.beginPath(); c.moveTo(-4,-26); c.lineTo(-13,-38); c.lineTo(-9,-38); c.lineTo(-2,-28); c.fill();
+    c.fillStyle="#2e4d23"; c.beginPath(); c.ellipse(-10,-46,16,14,0,0,7); c.fill();
+    c.fillStyle="#3a5e2c"; c.beginPath(); c.ellipse(10,-50,17,15,0,0,7); c.fill();
+    c.fillStyle="#456d34"; c.beginPath(); c.ellipse(0,-60,18,15,0,0,7); c.fill();
+  }
+  c.restore();
+}
+
+function drawPlayer(c){
+  const p=player;
+  c.save(); c.translate(p.x,p.y); c.scale(p.dir,1);
+  const bob=Math.sin(p.walking*10)*1.5;
+  c.fillStyle="rgba(0,0,0,.25)"; c.beginPath(); c.ellipse(0,2,11,4,0,0,7); c.fill();
+  c.translate(0,bob*0.3);
+  // nohy
+  c.fillStyle="#3a4a2a";
+  c.fillRect(-6,-14+Math.sin(p.walking*10)*2,5,14);
+  c.fillRect(1,-14-Math.sin(p.walking*10)*2,5,14);
+  // čižmy
+  c.fillStyle="#241a10";
+  c.fillRect(-7,-3+Math.sin(p.walking*10)*2,7,4); c.fillRect(0,-3-Math.sin(p.walking*10)*2,7,4);
+  // telo — vesta
+  c.fillStyle="#6b5232"; c.fillRect(-7,-32,14,19);
+  c.fillStyle="#54422a"; c.fillRect(-2,-32,4,19);
+  // ruka + košík
+  c.fillStyle="#6b5232"; c.fillRect(5,-30,4,12);
+  c.strokeStyle="#8a6a3a"; c.lineWidth=2; c.beginPath(); c.arc(11,-16,5,Math.PI,0,true); c.stroke();
+  c.fillStyle="#9a7a44"; c.beginPath(); c.moveTo(5,-16); c.lineTo(17,-16); c.lineTo(15,-8); c.lineTo(7,-8); c.fill();
+  c.strokeStyle="rgba(60,40,20,.6)"; c.lineWidth=.8;
+  c.beginPath(); c.moveTo(6,-13); c.lineTo(16,-13); c.stroke();
+  if(basket.length){ c.fillStyle="#7a4a22"; c.beginPath(); c.ellipse(9,-16,2.2,1.6,0,0,7); c.fill();
+    c.fillStyle="#c98a3b"; c.beginPath(); c.ellipse(13,-16.5,2,1.5,0,0,7); c.fill(); }
+  // hlava
+  c.fillStyle="#e0b48a"; c.beginPath(); c.arc(0,-38,6.5,0,7); c.fill();
+  c.fillStyle="#2b2417"; c.fillRect(2,-39,2,1.6); // oko
+  // klobúk hubára
+  c.fillStyle="#3f5232"; c.beginPath(); c.ellipse(0,-43,9.5,3,0,0,7); c.fill();
+  c.beginPath(); c.moveTo(-6,-43); c.quadraticCurveTo(0,-52,6,-43); c.fill();
+  c.fillStyle="#c0392b"; c.beginPath(); c.arc(5,-44.5,1.5,0,7); c.fill(); // pierko/odznak
+  c.restore();
+}
+
+let lastT=0;
+function frame(ts){
+  const dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
+  // pohyb
+  if(player.tx!=null){
+    const dx=player.tx-player.x, dy=player.ty-player.y, dist=Math.hypot(dx,dy);
+    const sp=(profile.up.boots?165:115);
+    if(dist<6){ player.tx=null; player.walking=0;
+      if(player.autoOpen){ const m=player.autoOpen; player.autoOpen=null;
+        if(!m.picked && Math.hypot(m.x-player.x,m.y-player.y)<70) openInspect(m); } }
+    else{ player.x+=dx/dist*sp*dt; player.y+=dy/dist*sp*dt;
+      player.dir = dx>=0?1:-1; player.walking+=dt; }
+  }
+  // kamera
+  camX=Math.max(0,Math.min(WORLD.w-innerWidth, player.x-innerWidth/2));
+  camY=Math.max(0,Math.min(WORLD.h-innerHeight, player.y-innerHeight/2));
+
+  const t=TERRAINS[terrain];
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  // pôda
+  const g=cx.createLinearGradient(0,0,0,innerHeight);
+  g.addColorStop(0,t.ground[1]); g.addColorStop(1,t.ground[0]);
+  cx.fillStyle=g; cx.fillRect(0,0,innerWidth,innerHeight);
+  cx.save(); cx.translate(-camX,-camY);
+  // textúra pôdy (deterministická)
+  cx.fillStyle="rgba(0,0,0,.10)";
+  for(let i=0;i<160;i++){ const px=(i*173)%WORLD.w, py=(i*251)%WORLD.h;
+    cx.beginPath(); cx.ellipse(px,py,9+(i%5)*3,3+(i%3),0,0,7); cx.fill(); }
+  cx.fillStyle="rgba(255,255,240,.05)";
+  for(let i=0;i<90;i++){ const px=(i*311)%WORLD.w, py=(i*197)%WORLD.h;
+    cx.beginPath(); cx.ellipse(px,py,14,4,0,0,7); cx.fill(); }
+  // cieľ pohybu
+  if(player.tx!=null){ cx.strokeStyle="rgba(243,234,212,.45)"; cx.lineWidth=1.5;
+    cx.beginPath(); cx.arc(player.tx,player.ty,8+Math.sin(ts/150)*2,0,7); cx.stroke(); }
+
+  // objekty zoradené podľa y
+  const objs=[];
+  trees.forEach(tr=>objs.push({y:tr.y,f:()=>drawTree(cx,tr)}));
+  shrooms.forEach(m=>{ if(!m.picked) objs.push({y:m.y,f:()=>{
+    drawMushroom(cx,m.x,m.y,m.s,m.sp.draw);
+    const d=Math.hypot(m.x-player.x,m.y-player.y);
+    if(d<110){ cx.strokeStyle="rgba(243,234,212,"+(0.7-d/200)+")"; cx.lineWidth=1.3;
+      cx.beginPath(); cx.arc(m.x,m.y-12,20,0,7); cx.stroke();
+      cx.fillStyle="rgba(243,234,212,.9)"; cx.font="13px Georgia";
+      cx.textAlign="center"; cx.fillText("🔍",m.x,m.y-36); }
+  }})});
+  objs.push({y:player.y,f:()=>drawPlayer(cx)});
+  objs.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
+
+  // lúče svetla
+  cx.globalAlpha=.06; cx.fillStyle=t.light;
+  for(let i=0;i<4;i++){ const px=(i*457)%WORLD.w;
+    cx.beginPath(); cx.moveTo(px,0); cx.lineTo(px+120,0); cx.lineTo(px+40,WORLD.h); cx.lineTo(px-40,WORLD.h); cx.fill(); }
+  cx.globalAlpha=1;
+  cx.restore();
+  // vinetácia
+  const v=cx.createRadialGradient(innerWidth/2,innerHeight/2,innerHeight/3,innerWidth/2,innerHeight/2,innerHeight);
+  v.addColorStop(0,"rgba(0,0,0,0)"); v.addColorStop(1,"rgba(0,0,0,.35)");
+  cx.fillStyle=v; cx.fillRect(0,0,innerWidth,innerHeight);
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* =====================================================
+   VSTUP — ťuknutie do sveta
+===================================================== */
+cv.addEventListener("pointerdown",e=>{
+  const wx=e.clientX+camX, wy=e.clientY+camY;
+  // našla sa huba?
+  let best=null,bd=1e9;
+  shrooms.forEach(m=>{ if(m.picked)return;
+    const d=Math.hypot(m.x-wx,m.y-(wy+14)); if(d<34 && d<bd){bd=d;best=m;} });
+  if(best){
+    if(Math.hypot(best.x-player.x,best.y-player.y)<70){ openInspect(best); }
+    else{ player.tx=best.x+18; player.ty=best.y+10; player.autoOpen=best; }
+  } else { player.tx=Math.max(30,Math.min(WORLD.w-30,wx));
+           player.ty=Math.max(110,Math.min(WORLD.h-30,wy)); player.autoOpen=null; }
+});
+
+/* =====================================================
+   UI pomocníci
+===================================================== */
+const $=id=>document.getElementById(id);
+function toast(msg,cls=""){ const t=document.createElement("div"); t.className="toast "+cls;
+  t.innerHTML=msg; $("toasts").appendChild(t); setTimeout(()=>t.remove(),4800); }
+function eur(x){ return x.toFixed(2).replace(".",",")+" €"; }
+function refreshHUD(){
+  const lv=LV(profile.xp), lo=lvlBase(lv), hi=lvlBase(lv+1);
+  $("lvltxt").textContent=`Hubár · Lv ${lv} · ${profile.xp} XP`;
+  $("xpfill").style.width=Math.min(100,(profile.xp-lo)/(hi-lo)*100)+"%";
+  $("money").textContent=profile.money.toFixed(2).replace(".",",");
+  $("basketCnt").textContent=basket.length; $("basketMax").textContent=basketMax();
+}
+function gainXP(n,why){
+  const before=LV(profile.xp);
+  profile.xp=Math.max(0,profile.xp+n);
+  const after=LV(profile.xp);
+  if(n>0) toast(`+${n} XP — ${why}`,"gold"); else toast(`${n} XP — ${why}`,"bad");
+  if(after>before){
+    toast(`🎉 <b>Level ${after}!</b> ${unlockMsg(after)}`,"gold");
+  }
+  refreshHUD(); save();
+}
+function unlockMsg(lv){
+  const u=Object.entries(TERRAINS).find(([k,t])=>t.lvl===lv);
+  return u?`Odomkol si: ${u[1].ico} ${u[1].name}`:"Len tak ďalej!";
+}
+
+/* =====================================================
+   INŠPEKCIA HUBY — atlasová karta
+===================================================== */
+function openInspect(m){
+  currentInspect=m;
+  const sp=m.sp, hasAtlas=profile.up.atlas;
+  $("insName").textContent = hasAtlas? sp.name : "Neznáma huba";
+  $("insLatin").textContent = hasAtlas? sp.latin : "Urči ju podľa znakov…";
+  const ic=$("inspectCanvas").getContext("2d");
+  ic.clearRect(0,0,240,190);
+  drawMushroom(ic,120,150,4.2,sp.draw);
+  $("insTraits").innerHTML = sp.traits.map(t=>
+    `<div><b>${t[0]}</b><span>${t[2]?`<span class="chip" style="background:${t[2]}"></span>`:""}${t[1]}</span></div>`).join("");
+  $("insHint").textContent = hasAtlas? sp.hint : "💡 Atlas húb z trhu ti prezradí názov hneď.";
+  $("inspectOv").classList.remove("hidden");
+}
+$("btnLeave").onclick=()=>{
+  const m=currentInspect; $("inspectOv").classList.add("hidden");
+  if(m && (m.sp.type==="toxic"||m.sp.type==="inedible") && !m.seenBonus){
+    m.seenBonus=true; gainXP(4,"dobré oko — nebezpečnú hubu si nechal v lese");
+  }
+};
+$("btnPick").onclick=()=>{
+  const m=currentInspect; $("inspectOv").classList.add("hidden");
+  if(!m) return;
+  m.picked=true;
+  if(m.sp.type==="toxic"||m.sp.type==="inedible"){
+    gainXP(m.sp.xp, m.sp.warn||"zlá huba");
+    return; // zahodená, do košíka nejde
+  }
+  if(basket.length>=basketMax()){ toast("🧺 Košík je plný! Choď predať na trh.","bad"); m.picked=false; return; }
+  openClean(m);
+};
+
+/* =====================================================
+   ČISTENIE
+===================================================== */
+function openClean(m){
+  const dirtN=1+Math.floor(Math.random()*3);
+  const dirt=[];
+  for(let i=0;i<dirtN;i++){
+    dirt.push({x:rnd(-9,9), y:rnd(-26,-2), r:rnd(2.2,3.4), a:rnd(0,3), done:false});
+  }
+  currentClean={m,dirt};
+  $("cleanName").textContent = profile.up.atlas? m.sp.name : "Jedlá huba 🙂";
+  $("btnDoneClean").classList.add("hidden");
+  $("btnSkipClean").classList.remove("hidden");
+  $("cleanHint").textContent = profile.up.knife
+    ? "🔪 Hubársky nôž: ťukni raz a očistí všetko."
+    : "Ťukaj na špinu. Čistá huba má na trhu plnú cenu.";
+  renderClean();
+  $("cleanOv").classList.remove("hidden");
+}
+function renderClean(){
+  const c=$("cleanCanvas").getContext("2d");
+  c.clearRect(0,0,240,190);
+  drawMushroom(c,120,150,4.2,currentClean.m.sp.draw,{dirt:currentClean.dirt});
+  if(currentClean.dirt.every(b=>b.done)){
+    $("btnDoneClean").classList.remove("hidden");
+    $("btnSkipClean").classList.add("hidden");
+    $("cleanHint").textContent="✨ Čistučká! Taká sa predáva najlepšie.";
+  }
+}
+$("cleanCanvas").addEventListener("pointerdown",e=>{
+  if(!currentClean) return;
+  const r=e.target.getBoundingClientRect();
+  const x=((e.clientX-r.left)/r.width*240-120)/4.2, y=((e.clientY-r.top)/r.height*190-150)/4.2;
+  let hit=false;
+  currentClean.dirt.forEach(b=>{ if(!b.done && Math.hypot(b.x-x,b.y-y)<b.r+2.4){ b.done=true; hit=true; } });
+  if(profile.up.knife && hit) currentClean.dirt.forEach(b=>b.done=true);
+  if(hit) renderClean();
+});
+function finishClean(clean){
+  const m=currentClean.m;
+  basket.push({sp:m.sp, clean});
+  $("cleanOv").classList.add("hidden"); currentClean=null;
+  gainXP(m.sp.xp, m.sp.type==="top" ? `${m.sp.name} — prvotriedny úlovok!` : `${m.sp.name} do košíka`);
+  refreshHUD();
+}
+$("btnDoneClean").onclick=()=>finishClean(true);
+$("btnSkipClean").onclick=()=>finishClean(false);
+
+/* =====================================================
+   TRH + OBCHOD
+===================================================== */
+const SHOP=[
+ {id:"knife", name:"Hubársky nôž", price:12, desc:"Jedným ťuknutím očistíš celú hubu."},
+ {id:"atlas", name:"Atlas húb", price:20, desc:"Pri každej hube hneď vidíš jej názov a popis."},
+ {id:"boots", name:"Gumáky Tatra", price:15, desc:"Po lese sa hýbeš o polovicu rýchlejšie."},
+ {id:"basket1", name:"Prútený košík (12 miest)", price:10, desc:"Viac húb na jednu výpravu."},
+ {id:"basket2", name:"Krošňa (18 miest)", price:28, desc:"Košík skúseného hubára."}
+];
+function itemPrice(it){ return it.sp.price * (it.clean?1:0.55); }
+function openMarket(){
+  const L=$("marketList"); L.innerHTML="";
+  if(!basket.length) L.innerHTML='<div class="hintline" style="margin:10px 0">Košík je prázdny — les čaká.</div>';
+  // zoskupiť
+  const groups={};
+  basket.forEach(it=>{ const k=it.sp.id+(it.clean?"c":"d");
+    (groups[k]=groups[k]||{sp:it.sp,clean:it.clean,n:0}).n++; });
+  let total=0;
+  Object.values(groups).forEach(gr=>{
+    const p=gr.sp.price*(gr.clean?1:0.55)*gr.n; total+=p;
+    const row=document.createElement("div"); row.className="mrow";
+    row.innerHTML=`<span class="nm">${gr.n}× ${gr.sp.name}${gr.clean?"":' <span class="dirty">špinavá −45 %</span>'}</span>
+      <span class="price">${eur(p)}</span>`;
+    L.appendChild(row);
+  });
+  $("marketTotal").textContent=eur(total);
+  $("btnSellAll").disabled=!basket.length;
+  // obchod
+  const S=$("shopList"); S.innerHTML="";
+  SHOP.forEach(s=>{
+    let owned=false, blocked=false;
+    if(s.id==="knife") owned=profile.up.knife;
+    if(s.id==="atlas") owned=profile.up.atlas;
+    if(s.id==="boots") owned=profile.up.boots;
+    if(s.id==="basket1"){ owned=profile.up.basket>=1; }
+    if(s.id==="basket2"){ owned=profile.up.basket>=2; blocked=profile.up.basket<1; }
+    const row=document.createElement("div"); row.className="shoprow";
+    row.innerHTML=`<span>${s.name}<small>${s.desc}</small></span>`;
+    if(owned){ row.innerHTML+=`<span class="owned">✓ máš</span>`; }
+    else{
+      const b=document.createElement("button"); b.className="buy"; b.textContent=eur(s.price);
+      b.disabled = profile.money<s.price || blocked;
+      b.onclick=()=>{ profile.money-=s.price;
+        if(s.id==="knife")profile.up.knife=true;
+        if(s.id==="atlas")profile.up.atlas=true;
+        if(s.id==="boots")profile.up.boots=true;
+        if(s.id==="basket1")profile.up.basket=Math.max(profile.up.basket,1);
+        if(s.id==="basket2")profile.up.basket=2;
+        toast(`🛒 Kúpené: ${s.name}`,"gold"); save(); refreshHUD(); openMarket(); };
+      row.appendChild(b);
+    }
+    S.appendChild(row);
+  });
+  $("marketOv").classList.remove("hidden");
+}
+$("btnSellAll").onclick=()=>{
+  let total=0; basket.forEach(it=>total+=itemPrice(it));
+  const n=basket.length;
+  profile.money+=total; basket=[];
+  toast(`💶 Predal si ${n} húb za <b>${eur(total)}</b>.`,"gold");
+  gainXP(Math.max(2,Math.round(n*1.5)),"úspešný predaj na trhu");
+  save(); refreshHUD(); openMarket();
+};
+$("btnMarket").onclick=openMarket;
+
+/* =====================================================
+   MENU LESOV, ATLAS, OSTATNÉ
+===================================================== */
+function openMenu(){
+  const L=$("terrList"); L.innerHTML="";
+  const lv=LV(profile.xp);
+  Object.entries(TERRAINS).forEach(([k,t])=>{
+    const b=document.createElement("button"); b.className="terr"; b.disabled=lv<t.lvl;
+    b.innerHTML=`<span class="ico">${t.ico}</span><span><b>${t.name}</b>${k===terrain?" · si tu":""}<small>${t.desc}</small></span>`
+      +(lv<t.lvl?`<span class="lock">🔒 Lv ${t.lvl}</span>`:"");
+    b.onclick=()=>{ terrain=k; genForest(); $("menuOv").classList.add("hidden");
+      toast(`${t.ico} Vošiel si do: <b>${t.name}</b>`); };
+    L.appendChild(b);
+  });
+  $("menuOv").classList.remove("hidden");
+}
+$("btnMenu").onclick=openMenu;
+$("btnDeeper").onclick=()=>{ genForest(); toast("🥾 Prešiel si hlbšie do lesa — nové huby, nové šance."); };
+
+function openAtlas(){
+  const L=$("atlasList"); L.innerHTML="";
+  $("atlasTitle").textContent = profile.up.atlas? "Atlas húb" : "Atlas (ukážka)";
+  const list = profile.up.atlas? SPECIES : SPECIES.slice(0,3);
+  const tagN={top:["top","NAJ"],edible:["ed","JEDLÁ"],inedible:["ined","NEJEDLÁ"],toxic:["tox","JEDOVATÁ"]};
+  list.forEach(sp=>{
+    const row=document.createElement("div"); row.className="arow";
+    const c=document.createElement("canvas"); c.width=54; c.height=58;
+    drawMushroom(c.getContext("2d"),27,50,1.55,sp.draw);
+    const [cls,txt]=tagN[sp.type];
+    const info=document.createElement("div"); info.className="ainfo";
+    info.innerHTML=`<b>${sp.name}</b><span class="tag ${cls}">${txt}</span><br>
+      <i style="opacity:.6">${sp.latin}</i> · ${sp.price?`výkup ${eur(sp.price)}/ks`:"bez ceny"}<br>${sp.hint}`;
+    row.appendChild(c); row.appendChild(info); L.appendChild(row);
+  });
+  if(!profile.up.atlas){
+    const d=document.createElement("div"); d.className="hintline";
+    d.style.margin="12px 0 4px";
+    d.textContent="🔒 Kompletný atlas všetkých druhov kúpiš na trhu za 20 €.";
+    L.appendChild(d);
+  }
+  $("atlasOv").classList.remove("hidden");
+}
+$("btnAtlas").onclick=openAtlas;
+
+document.querySelectorAll(".closex").forEach(b=>b.onclick=()=>$(b.dataset.close).classList.add("hidden"));
+
+/* =====================================================
+   ŠTART
+===================================================== */
+$("btnStart").onclick=async()=>{ $("introOv").classList.add("hidden"); };
+(async()=>{ await load(); genForest(); refreshHUD(); })();
+</script>
+</body>
+</html>
