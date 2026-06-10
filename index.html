@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hubár 3D — les z prvej osoby</title>
+<style>
+  :root{
+    --les:#16301f; --mach:#3f6234; --okra:#c98a3b; --papier:#f3ead4;
+    --atrament:#2b2417; --mucho:#b8372b; --zlata:#e0b34a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#0c1810;
+    font-family:Georgia,'Times New Roman',serif;color:var(--papier)}
+  #game{position:fixed;inset:0;touch-action:none;display:block}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;
+    padding:10px 12px;pointer-events:none;z-index:20;
+    background:linear-gradient(180deg,rgba(8,16,10,.8),rgba(8,16,10,0));}
+  .pill{background:rgba(15,32,20,.85);border:1px solid rgba(243,234,212,.22);
+    border-radius:999px;padding:6px 12px;font-size:13.5px;display:flex;align-items:center;gap:6px;
+    white-space:nowrap}
+  #xpwrap{flex:1;min-width:88px;flex-direction:column;align-items:stretch}
+  #xpbar{height:7px;border-radius:99px;background:rgba(243,234,212,.18);overflow:hidden;margin-top:3px}
+  #xpfill{height:100%;width:0%;background:linear-gradient(90deg,var(--okra),var(--zlata));transition:width .4s}
+  #lvltxt{font-size:11.5px;letter-spacing:.04em;opacity:.92}
+
+  /* ---------- ovládanie ---------- */
+  #joy{position:fixed;left:18px;bottom:calc(22px + env(safe-area-inset-bottom));width:118px;height:118px;
+    border-radius:50%;background:rgba(15,32,20,.45);border:1.5px solid rgba(243,234,212,.3);
+    z-index:25;touch-action:none}
+  #knob{position:absolute;left:50%;top:50%;width:52px;height:52px;border-radius:50%;
+    background:rgba(243,234,212,.75);transform:translate(-50%,-50%);
+    box-shadow:0 3px 10px rgba(0,0,0,.45)}
+  #sidebtns{position:fixed;right:12px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:25;
+    display:flex;flex-direction:column;gap:9px}
+  .rbtn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(243,234,212,.3);
+    background:rgba(15,32,20,.78);color:var(--papier);font-size:21px;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .rbtn:active{transform:scale(.93)}
+  .rbtn.gold{background:var(--okra);color:var(--atrament);border:none}
+
+  /* lupa pri hube */
+  #lupa{position:fixed;z-index:22;transform:translate(-50%,-100%);display:none;
+    background:rgba(15,32,20,.88);border:1px solid rgba(243,234,212,.4);border-radius:999px;
+    padding:7px 14px;font-size:14px;pointer-events:auto;white-space:nowrap;
+    box-shadow:0 4px 14px rgba(0,0,0,.5)}
+  #lupa::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:rgba(15,32,20,.88);border-bottom:none}
+
+  #deskhint{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:21;
+    font-size:12px;opacity:.55;pointer-events:none;display:none}
+  @media (hover:hover) and (pointer:fine){ #deskhint{display:block} }
+
+  button{font-family:inherit;cursor:pointer}
+  .btn{background:var(--okra);color:var(--atrament);border:none;border-radius:12px;
+    padding:11px 16px;font-size:15px;font-weight:bold;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .btn.ghost{background:rgba(243,234,212,.14);color:var(--papier);border:1px solid rgba(243,234,212,.3)}
+  .btn.green{background:var(--mach);color:var(--papier)}
+
+  /* ---------- modálne okná (atlasový papier) ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(5,10,6,.74);z-index:40;display:flex;
+    align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(2px)}
+  .hidden{display:none!important}
+  .card{background:var(--papier);color:var(--atrament);border-radius:6px;max-width:430px;width:100%;
+    max-height:88vh;overflow-y:auto;padding:18px 18px 16px;position:relative;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(43,36,23,.05) 28px)}
+  .card::before{content:"";position:absolute;inset:6px;border:1px solid rgba(43,36,23,.35);
+    border-radius:3px;pointer-events:none}
+  .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65;text-align:center}
+  .card h2{font-size:23px;text-align:center;margin:2px 0 0;font-style:italic}
+  .latin{text-align:center;font-size:13px;opacity:.6;font-style:italic;margin-bottom:6px}
+  .traits{margin:10px 4px;font-size:14.5px;line-height:1.45}
+  .traits div{display:flex;gap:8px;margin:5px 0;align-items:baseline}
+  .traits b{min-width:64px;display:inline-block;font-style:italic;font-weight:normal;opacity:.7}
+  .chip{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.3);
+    vertical-align:-1px;margin-right:4px}
+  .cardbtns{display:flex;gap:10px;margin-top:12px}
+  .cardbtns .btn{flex:1}
+  #inspectCanvas,#cleanCanvas{display:block;margin:6px auto;background:radial-gradient(circle at 50% 65%,#e7dcbe,#d8caa5);
+    border-radius:4px;border:1px solid rgba(43,36,23,.25)}
+  .hintline{text-align:center;font-size:13px;opacity:.75;margin-top:4px}
+
+  .mrow{display:flex;justify-content:space-between;align-items:center;padding:7px 4px;
+    border-bottom:1px dashed rgba(43,36,23,.3);font-size:14.5px;gap:8px}
+  .mrow .nm{flex:1}
+  .price{font-weight:bold;white-space:nowrap}
+  .dirty{font-size:11px;color:#8a5b22}
+  .shoprow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 4px;
+    border-bottom:1px dashed rgba(43,36,23,.3);font-size:14px}
+  .shoprow small{display:block;opacity:.65;font-size:12px;margin-top:1px}
+  .buy{background:var(--mach);color:var(--papier);border:none;border-radius:8px;padding:7px 12px;
+    font-weight:bold;font-size:13px;white-space:nowrap}
+  .buy:disabled{opacity:.4}
+  .owned{font-size:12px;color:var(--mach);font-weight:bold;white-space:nowrap}
+
+  #toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;display:flex;
+    flex-direction:column;gap:8px;width:min(92vw,400px);pointer-events:none}
+  .toast{background:rgba(15,32,20,.95);border-left:4px solid var(--okra);color:var(--papier);
+    border-radius:8px;padding:10px 13px;font-size:14px;line-height:1.4;
+    animation:tin .25s ease,tout .4s ease 4.3s forwards;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .toast.bad{border-left-color:var(--mucho)}
+  .toast.gold{border-left-color:var(--zlata)}
+  @keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
+  @keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+
+  .terr{display:flex;gap:10px;align-items:center;width:100%;text-align:left;
+    background:rgba(43,36,23,.06);border:1px solid rgba(43,36,23,.3);border-radius:8px;
+    padding:11px 12px;margin:7px 0;font-family:inherit;font-size:15px;color:var(--atrament)}
+  .terr:disabled{opacity:.45}
+  .terr .ico{font-size:24px}
+  .terr small{display:block;font-size:12px;opacity:.65;margin-top:1px}
+  .lock{margin-left:auto;font-size:12px;font-weight:bold;color:var(--mucho);white-space:nowrap}
+
+  .arow{display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px dashed rgba(43,36,23,.3)}
+  .arow canvas{flex:none}
+  .arow .ainfo{font-size:13.5px;line-height:1.35}
+  .tag{display:inline-block;font-size:10.5px;font-weight:bold;letter-spacing:.05em;border-radius:4px;
+    padding:1px 6px;color:var(--papier);vertical-align:1px;margin-left:5px}
+  .tag.top{background:var(--zlata);color:var(--atrament)}
+  .tag.ed{background:var(--mach)}
+  .tag.ined{background:#8a6a2a}
+  .tag.tox{background:var(--mucho)}
+  .closex{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;
+    color:var(--atrament);opacity:.6;z-index:2}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="pill" id="xpwrap">
+    <span id="lvltxt">Hubár · Lv 1</span>
+    <div id="xpbar"><div id="xpfill"></div></div>
+  </div>
+  <div class="pill">💶 <span id="money">0</span> €</div>
+  <div class="pill">🧺 <span id="basketCnt">0</span>/<span id="basketMax">8</span></div>
+</div>
+
+<div id="joy"><div id="knob"></div></div>
+<div id="sidebtns">
+  <button class="rbtn" id="btnMenu">🌲</button>
+  <button class="rbtn" id="btnAtlas">📖</button>
+  <button class="rbtn" id="btnDeeper">🥾</button>
+  <button class="rbtn gold" id="btnMarket">🏪</button>
+</div>
+<div id="lupa">🔍 Obzrieť hubu</div>
+<div id="deskhint">WASD / šípky = chôdza · ťahaj myšou = rozhliadanie · klik na hubu = inšpekcia</div>
+<div id="toasts"></div>
+
+<!-- ATLASOVÁ KARTA HUBY -->
+<div class="overlay hidden" id="inspectOv">
+  <div class="card">
+    <div class="eyebrow">Strana z hubárskeho atlasu</div>
+    <h2 id="insName">?</h2>
+    <div class="latin" id="insLatin"></div>
+    <canvas id="inspectCanvas" width="240" height="190"></canvas>
+    <div class="traits" id="insTraits"></div>
+    <div class="hintline" id="insHint"></div>
+    <div class="cardbtns">
+      <button class="btn ghost" id="btnLeave" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Nechať rásť</button>
+      <button class="btn green" id="btnPick">Odrezať ✂️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ČISTENIE -->
+<div class="overlay hidden" id="cleanOv">
+  <div class="card">
+    <div class="eyebrow">Očisti hubu od hliny a ihličia</div>
+    <h2 id="cleanName" style="font-size:19px"></h2>
+    <canvas id="cleanCanvas" width="240" height="190"></canvas>
+    <div class="hintline" id="cleanHint">Ťukaj na špinu. Čistá huba má na trhu plnú cenu.</div>
+    <div class="cardbtns">
+      <button class="btn ghost" id="btnSkipClean" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Hodiť do košíka špinavú</button>
+      <button class="btn green hidden" id="btnDoneClean">Do košíka 🧺</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRH -->
+<div class="overlay hidden" id="marketOv">
+  <div class="card">
+    <button class="closex" data-close="marketOv">✕</button>
+    <div class="eyebrow">Žilinská tržnica</div>
+    <h2>Výkup húb</h2>
+    <div id="marketList"></div>
+    <div class="mrow" style="border-bottom:none;font-size:16px"><span class="nm"><b>Spolu</b></span>
+      <span class="price" id="marketTotal">0,00 €</span></div>
+    <div class="cardbtns"><button class="btn green" id="btnSellAll">Predať všetko</button></div>
+    <div class="eyebrow" style="margin-top:16px">Hubárske potreby</div>
+    <div id="shopList"></div>
+  </div>
+</div>
+
+<!-- VÝBER LESA -->
+<div class="overlay hidden" id="menuOv">
+  <div class="card">
+    <button class="closex" data-close="menuOv">✕</button>
+    <div class="eyebrow">Kam na huby?</div>
+    <h2>Vyber si les</h2>
+    <div id="terrList"></div>
+    <div class="hintline">Každý les má iné druhy. Vyššie levely odomykajú vzácnejšie miesta.</div>
+  </div>
+</div>
+
+<!-- ATLAS -->
+<div class="overlay hidden" id="atlasOv">
+  <div class="card">
+    <button class="closex" data-close="atlasOv">✕</button>
+    <div class="eyebrow">Hubársky atlas</div>
+    <h2 id="atlasTitle">Atlas húb</h2>
+    <div id="atlasList"></div>
+  </div>
+</div>
+
+<!-- ÚVOD -->
+<div class="overlay" id="introOv">
+  <div class="card">
+    <div class="eyebrow">Lesná zberateľská hra · pohľad prvej osoby</div>
+    <h2>Hubár 3D</h2>
+    <div class="traits" style="margin-top:10px">
+      <div>🕹️&nbsp; Ľavý joystick = chôdza. Ťahanie prstom po obraze = rozhliadanie.</div>
+      <div>🔍&nbsp; Keď prídeš k hube, objaví sa bublina — ťukni na ňu (alebo priamo na hubu).</div>
+      <div>⚠️&nbsp; Skúmaj znaky: klobúk, spodok, hlúbik, prsteň, pošvu. Dvojníci klamú!</div>
+      <div>🧺&nbsp; Jedlé očisti a predaj na trhu. Za peniaze kúpiš nôž, atlas, gumáky aj krošňu.</div>
+    </div>
+    <div class="cardbtns"><button class="btn green" id="btnStart">Vyraziť do lesa 🌲</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+/* =====================================================
+   DÁTA — druhy húb (reálne slovenské druhy)
+===================================================== */
+const SPECIES = [
+ {id:"hrib_smrekovy", name:"Hríb smrekový", latin:"Boletus edulis", type:"top", price:3.8, xp:25,
+  terr:["smrek","prales"],
+  draw:{cap:"#7a4a22",capEdge:"#9c6b3a",shape:"bun",stem:"#e8dcc2",stemBulb:true,net:"#d8c9a8",under:"#e9e2c4"},
+  traits:[["Klobúk","hnedý, vypuklý ako žemľa","#7a4a22"],["Spodok","rúrky — mladé biele, neskôr žltozelené","#e9e2c4"],["Hlúbik","svetlý, bruchatý, s jemnou svetlou sieťkou","#e8dcc2"]],
+  hint:"Pozor na dvojníka: hríb žlčový má ružovkasté rúrky a tmavú sieťku."},
+
+ {id:"hrib_dubovy", name:"Hríb dubový", latin:"Boletus reticulatus", type:"top", price:3.8, xp:25,
+  terr:["dub","prales"],
+  draw:{cap:"#8a6a42",capEdge:"#a98a5c",shape:"bun",stem:"#dccfae",stemBulb:true,net:"#b9a87f",under:"#e9e2c4"},
+  traits:[["Klobúk","svetlohnedý, matný, jemne rozpukaný","#8a6a42"],["Spodok","rúrky — biele až žltkasté","#e9e2c4"],["Hlúbik","s výraznou sieťkou po celej dĺžke","#dccfae"]],
+  hint:"Rastie pod dubmi už od jari. Dvojník: hríb žlčový."},
+
+ {id:"kuriatko", name:"Kuriatko jedlé", latin:"Cantharellus cibarius", type:"edible", price:1.6, xp:12,
+  terr:["smrek","dub","prales"],
+  draw:{cap:"#e8a93c",capEdge:"#f0bd5e",shape:"funnel",stem:"#e3a73e",under:"#eebd62",ridges:true},
+  traits:[["Klobúk","žltý, lievikovitý, zvlnený okraj","#e8a93c"],["Spodok","hrubé zbiehavé lišty (nie pravé lupene)","#eebd62"],["Vôňa","príjemne ovocná, po marhuliach",null]],
+  hint:"Dvojník: líška oranžová — má tenké husté lupene a rastie na dreve/ihličí."},
+
+ {id:"bedla", name:"Bedľa vysoká", latin:"Macrolepiota procera", type:"edible", price:2.0, xp:15,
+  terr:["dub","prales","breza"],
+  draw:{cap:"#cdb48f",capEdge:"#e3d7bd",shape:"parasol",stem:"#cba98a",scales:"#7a5a36",ring:true,under:"#f0ead6"},
+  traits:[["Klobúk","veľký „dáždnik“ s hnedými šupinami","#cdb48f"],["Spodok","biele voľné lupene","#f0ead6"],["Hlúbik","vysoký, hadovito strakatý, posuvný prsteň","#cba98a"]],
+  hint:"Mladú zatvorenú bedľu si nemýľ s muchotrávkou — bedľa nemá pošvu na báze!"},
+
+ {id:"kozak", name:"Kozák brezový", latin:"Leccinum scabrum", type:"edible", price:1.2, xp:10,
+  terr:["breza","prales"],
+  draw:{cap:"#6e5236",capEdge:"#856648",shape:"bun",stem:"#e6e0cf",speckles:"#3a3228",under:"#ded8c0"},
+  traits:[["Klobúk","sivohnedý, polguľovitý","#6e5236"],["Spodok","rúrky — špinavobiele","#ded8c0"],["Hlúbik","štíhly, biely s čiernymi šupinkami","#e6e0cf"]],
+  hint:"Verný spoločník briez. Kvalitná jedlá huba."},
+
+ {id:"masliak", name:"Masliak obyčajný", latin:"Suillus luteus", type:"edible", price:0.9, xp:8,
+  terr:["smrek"],
+  draw:{cap:"#5e3d1e",capEdge:"#7a5530",shape:"bun",gloss:true,stem:"#e4d9b8",ring:true,under:"#e8d27a"},
+  traits:[["Klobúk","čokoládový, v mokru slizký a lesklý","#5e3d1e"],["Spodok","rúrky — citrónovo žlté","#e8d27a"],["Hlúbik","s blanitým prsteňom","#e4d9b8"]],
+  hint:"Šupku z klobúka pred varením stiahni."},
+
+ {id:"suchohrib", name:"Suchohríb hnedý", latin:"Imleria badia", type:"edible", price:1.1, xp:10,
+  terr:["smrek","prales"],
+  draw:{cap:"#5a3a24",capEdge:"#74543a",shape:"bun",stem:"#c8ab7e",under:"#dde0a8"},
+  traits:[["Klobúk","gaštanovohnedý, zamatový","#5a3a24"],["Spodok","rúrky žltkasté, po stlačení modrejú","#dde0a8"],["Hlúbik","hnedastý, bez sieťky","#c8ab7e"]],
+  hint:"Modranie po dotyku je tu normálne — nezľakni sa."},
+
+ {id:"horciak", name:"Hríb žlčový (horčiak)", latin:"Tylopilus felleus", type:"inedible", price:0, xp:-10,
+  terr:["smrek","prales","dub"],
+  draw:{cap:"#7c5a36",capEdge:"#97744c",shape:"bun",stem:"#cfc0a0",net:"#5e4a30",under:"#e3c6c0"},
+  traits:[["Klobúk","hnedý — na nerozoznanie od pravého hríba","#7c5a36"],["Spodok","rúrky s <b>ružovkastým</b> nádychom","#e3c6c0"],["Hlúbik","<b>tmavá hrubá sieťka</b>","#cfc0a0"]],
+  hint:"Dvojník hríba smrekového. Nie je jedovatý, ale horkosťou pokazí celé jedlo.",
+  warn:"Horčiak! Ružové rúrky a tmavá sieťka ťa mali varovať. Celý guláš by zhorkol."},
+
+ {id:"liska_or", name:"Líška oranžová", latin:"Hygrophoropsis aurantiaca", type:"inedible", price:0, xp:-8,
+  terr:["smrek","breza","prales"],
+  draw:{cap:"#d97f2e",capEdge:"#e89a4a",shape:"funnel",stem:"#c97a30",under:"#e08838",gills:true},
+  traits:[["Klobúk","oranžový, lievikovitý","#d97f2e"],["Spodok","<b>tenké husté pravé lupene</b>","#e08838"],["Rastie","na ihličí a tlejúcom dreve",null]],
+  hint:"Dvojník kuriatka. Kuriatko má hrubé lišty, líška tenké lupene.",
+  warn:"To nebolo kuriatko, ale líška oranžová — tenké lupene ju prezradili."},
+
+ {id:"mucho_cervena", name:"Muchotrávka červená", latin:"Amanita muscaria", type:"toxic", price:0, xp:-25,
+  terr:["breza","smrek","prales"],
+  draw:{cap:"#c0392b",capEdge:"#d6543f",shape:"bun",dots:"#f6f0e0",stem:"#f0ead8",ring:true,volva:true,under:"#f0ead6"},
+  traits:[["Klobúk","červený s bielymi bodkami","#c0392b"],["Spodok","biele lupene","#f0ead6"],["Hlúbik","biely, prsteň aj hľuznatá báza","#f0ead8"]],
+  hint:"Krásna, ale jedovatá. V hre aj v živote: nechaj ju lesu.",
+  warn:"Muchotrávka červená je jedovatá — spôsobuje nevoľnosť a halucinácie."},
+
+ {id:"mucho_zelena", name:"Muchotrávka zelená", latin:"Amanita phalloides", type:"toxic", price:0, xp:-60,
+  terr:["dub","prales"],
+  draw:{cap:"#8a9a4e",capEdge:"#a8b56a",shape:"bun",stem:"#eef0e0",ring:true,volva:true,under:"#f2f2e4"},
+  traits:[["Klobúk","olivovo zelenkastý, hodvábny","#8a9a4e"],["Spodok","<b>čisto biele</b> lupene","#f2f2e4"],["Hlúbik","biely, prsteň a <b>blanitá pošva</b> v zemi","#eef0e0"]],
+  hint:"Najnebezpečnejšia huba Európy. Pošva býva skrytá v zemi — hubu vždy vyberaj celú.",
+  warn:"MUCHOTRÁVKA ZELENÁ — smrteľne jedovatá! Biele lupene + prsteň + pošva. Pol klobúka dokáže zabiť."},
+
+ {id:"mucho_tigrovana", name:"Muchotrávka tigrovaná", latin:"Amanita pantherina", type:"toxic", price:0, xp:-40,
+  terr:["smrek","dub","prales"],
+  draw:{cap:"#6e5a40",capEdge:"#86745a",dots:"#f2ecd8",shape:"bun",stem:"#efe9d6",ring:true,volva:true,under:"#f0ead6"},
+  traits:[["Klobúk","hnedý s bielymi „krupicovými“ bodkami","#6e5a40"],["Spodok","biele lupene","#f0ead6"],["Hlúbik","biely, prsteň, golierikovitá pošva","#efe9d6"]],
+  hint:"Silne jedovatá. Bodkovaný hnedý klobúk + biele lupene = ruky preč.",
+  warn:"Muchotrávka tigrovaná — silne jedovatá, poškodzuje nervový systém."}
+];
+
+const TERRAINS = {
+ smrek:{name:"Smrekový les", ico:"🌲", lvl:1, desc:"Hríby smrekové, masliaky, kuriatka… a horčiaky.",
+   trees:"spruce", fog:"#26402a", sky:"#9fb98a", ground:"#2c4527"},
+ dub:{name:"Dubina", ico:"🌳", lvl:3, desc:"Hríby dubové a bedle. Pozor na muchotrávku zelenú!",
+   trees:"oak", fog:"#33482a", sky:"#b3c490", ground:"#3a4c28"},
+ breza:{name:"Brezový háj", ico:"🍃", lvl:4, desc:"Kozáky brezové a červené muchotrávky.",
+   trees:"birch", fog:"#3c5230", sky:"#c5d49c", ground:"#42542e"},
+ prales:{name:"Zmiešaný prales", ico:"🌲🌳", lvl:6, desc:"Najbohatší a najhustejší les — rastie tu všetko.",
+   trees:"mixed", fog:"#1d3320", sky:"#8aa87c", ground:"#243c20"}
+};
+
+/* =====================================================
+   STAV + ULOŽENIE
+===================================================== */
+const profile = { xp:0, money:0, up:{knife:false,atlas:false,boots:false,basket:0} };
+let terrain="smrek", basket=[];
+let currentInspect=null, currentClean=null;
+const LV=x=>Math.floor(Math.sqrt(x/40))+1;
+const lvlBase=l=>40*(l-1)*(l-1);
+const basketMax=()=>[8,12,18][profile.up.basket];
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+async function save(){ try{ if(window.storage) await window.storage.set("hubar-profil", JSON.stringify(profile)); }catch(e){} }
+async function load(){ try{ if(window.storage){ const r=await window.storage.get("hubar-profil");
+  if(r&&r.value){ const p=JSON.parse(r.value); Object.assign(profile,p);
+    profile.up=Object.assign({knife:false,atlas:false,boots:false,basket:0},p.up); } } }catch(e){} }
+
+/* =====================================================
+   THREE.JS — SCÉNA
+===================================================== */
+const WORLD_R = 78;            // polomer lesa v metroch
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.08, 220);
+const renderer = new THREE.WebGLRenderer({canvas:document.getElementById("game"), antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
+renderer.setSize(innerWidth, innerHeight);
+addEventListener("resize",()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); });
+
+const hemi = new THREE.HemisphereLight(0xeaf2cf, 0x2a3a20, 0.95);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2cf, 0.75);
+sun.position.set(30,55,18); scene.add(sun);
+
+/* ---------- textúry kreslené na canvas ---------- */
+function makeGroundTexture(base){
+  const c=document.createElement("canvas"); c.width=c.height=512; const x=c.getContext("2d");
+  x.fillStyle=base; x.fillRect(0,0,512,512);
+  for(let i=0;i<900;i++){ // machové a hlinené fľaky
+    const r=rnd(4,26);
+    x.fillStyle = Math.random()<.55 ? `rgba(20,40,18,${rnd(.05,.22)})` : `rgba(96,72,40,${rnd(.04,.16)})`;
+    x.beginPath(); x.ellipse(Math.random()*512,Math.random()*512,r,r*rnd(.4,.9),rnd(0,3),0,7); x.fill();
+  }
+  for(let i=0;i<1600;i++){ // ihličie / steblá
+    x.strokeStyle=`rgba(${Math.random()<.5?'150,170,90':'70,50,30'},${rnd(.1,.3)})`;
+    x.lineWidth=1;
+    const px=Math.random()*512, py=Math.random()*512, a=rnd(0,6.3);
+    x.beginPath(); x.moveTo(px,py); x.lineTo(px+Math.cos(a)*7,py+Math.sin(a)*7); x.stroke();
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(22,22);
+  return t;
+}
+function makeBarkTexture(base, marks){
+  const c=document.createElement("canvas"); c.width=128; c.height=256; const x=c.getContext("2d");
+  x.fillStyle=base; x.fillRect(0,0,128,256);
+  for(let i=0;i<60;i++){ x.fillStyle=`rgba(0,0,0,${rnd(.06,.2)})`;
+    x.fillRect(Math.random()*128, Math.random()*256, rnd(2,5), rnd(8,40)); }
+  if(marks) for(let i=0;i<26;i++){ x.fillStyle=`rgba(25,22,16,${rnd(.6,.95)})`;
+    const w=rnd(8,30); x.beginPath();
+    x.ellipse(Math.random()*128, Math.random()*256, w, rnd(2,5),0,0,7); x.fill(); }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+}
+const barkDark = makeBarkTexture("#4a3520",false);
+const barkBirch = makeBarkTexture("#e6e2d4",true);
+const blobC=document.createElement("canvas"); blobC.width=blobC.height=64;
+{ const x=blobC.getContext("2d"); const g=x.createRadialGradient(32,32,2,32,32,30);
+  g.addColorStop(0,"rgba(0,0,0,.45)"); g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g; x.fillRect(0,0,64,64); }
+const blobTex=new THREE.CanvasTexture(blobC);
+
+/* ---------- skupiny, ktoré sa pri zmene lesa rušia ---------- */
+let forestGroup=null, shroomGroup=null, ground=null;
+let shrooms=[];   // {sp, pos, picked, seenBonus, group, hit}
+let treePts=[];   // kolízie {x,z,r}
+
+const M4=new THREE.Matrix4(), Q=new THREE.Quaternion(), V3=new THREE.Vector3(), S3=new THREE.Vector3();
+function setInst(mesh,i,x,y,z, sx,sy,sz, ry=0, rz=0){
+  Q.setFromEuler(new THREE.Euler(0,ry,rz));
+  M4.compose(V3.set(x,y,z), Q, S3.set(sx,sy,sz));
+  mesh.setMatrixAt(i,M4);
+}
+
+function buildForest(){
+  if(forestGroup) scene.remove(forestGroup);
+  if(shroomGroup) scene.remove(shroomGroup);
+  if(ground) scene.remove(ground);
+  forestGroup=new THREE.Group(); shroomGroup=new THREE.Group();
+  shrooms=[]; treePts=[];
+  const T=TERRAINS[terrain];
+
+  scene.fog = new THREE.FogExp2(new THREE.Color(T.fog).getHex(), terrain==="prales"?0.040:0.030);
+  scene.background = new THREE.Color(T.sky);
+
+  // zem
+  ground = new THREE.Mesh(
+    new THREE.CircleGeometry(WORLD_R+40, 40),
+    new THREE.MeshLambertMaterial({map:makeGroundTexture(T.ground)}));
+  ground.rotation.x=-Math.PI/2; scene.add(ground);
+
+  /* --- stromy: inštancované podľa druhu --- */
+  const mix = T.trees==="mixed";
+  const counts = { spruce: mix? 120 : (T.trees==="spruce"? 240:0),
+                   oak:    mix? 70  : (T.trees==="oak"? 200:0),
+                   birch:  mix? 70  : (T.trees==="birch"? 210:0) };
+  const place=(n,rad)=>{ const pts=[];
+    for(let i=0;i<n;i++){ let x,z,tries=0;
+      do{ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+        x=Math.cos(a)*d; z=Math.sin(a)*d; tries++;
+      }while(tries<8 && Math.hypot(x,z)<5); // voľné miesto okolo štartu
+      pts.push({x,z}); treePts.push({x,z,r:rad}); }
+    return pts; };
+
+  // SMREK: kmeň + 2 kužele koruny
+  if(counts.spruce){
+    const p=place(counts.spruce,0.42);
+    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.16,.26,2.2,6),
+      new THREE.MeshLambertMaterial({map:barkDark}), p.length);
+    const crown=new THREE.InstancedMesh(new THREE.ConeGeometry(1.9,7.5,7),
+      new THREE.MeshLambertMaterial({color:0x1f4426}), p.length);
+    const crown2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.35,5.2,7),
+      new THREE.MeshLambertMaterial({color:0x2a5530}), p.length);
+    p.forEach((q,i)=>{ const s=rnd(.75,1.5), ry=rnd(0,6.3);
+      setInst(trunk,i,q.x,1.1*s,q.z, s,s,s, ry);
+      setInst(crown,i,q.x,5.0*s,q.z, s,s,s, ry);
+      setInst(crown2,i,q.x,7.2*s,q.z, s,s,s, ry); });
+    forestGroup.add(trunk,crown,crown2);
+  }
+  // DUB: hrubší kmeň + 2 gule
+  if(counts.oak){
+    const p=place(counts.oak,0.5);
+    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.38,2.8,7),
+      new THREE.MeshLambertMaterial({map:barkDark}), p.length);
+    const cr1=new THREE.InstancedMesh(new THREE.SphereGeometry(1.9,8,6),
+      new THREE.MeshLambertMaterial({color:0x33531f}), p.length);
+    const cr2=new THREE.InstancedMesh(new THREE.SphereGeometry(1.5,8,6),
+      new THREE.MeshLambertMaterial({color:0x40632a}), p.length);
+    p.forEach((q,i)=>{ const s=rnd(.8,1.4), ry=rnd(0,6.3);
+      setInst(trunk,i,q.x,1.4*s,q.z,s,s,s,ry);
+      setInst(cr1,i,q.x+rnd(-.5,.5)*s,4.0*s,q.z+rnd(-.5,.5)*s,s,s*rnd(.8,1),s,ry);
+      setInst(cr2,i,q.x+rnd(-.9,.9)*s,4.8*s,q.z+rnd(-.9,.9)*s,s,s,s,ry); });
+    forestGroup.add(trunk,cr1,cr2);
+  }
+  // BREZA: biely kmeň + svetlá guľa
+  if(counts.birch){
+    const p=place(counts.birch,0.32);
+    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.10,.16,4.6,6),
+      new THREE.MeshLambertMaterial({map:barkBirch}), p.length);
+    const cr=new THREE.InstancedMesh(new THREE.SphereGeometry(1.5,8,6),
+      new THREE.MeshLambertMaterial({color:0x7fa44a}), p.length);
+    p.forEach((q,i)=>{ const s=rnd(.8,1.35), ry=rnd(0,6.3), tilt=rnd(-.06,.06);
+      setInst(trunk,i,q.x,2.3*s,q.z,s,s,s,ry,tilt);
+      setInst(cr,i,q.x,5.0*s,q.z,s,s*rnd(.85,1.15),s,ry); });
+    forestGroup.add(trunk,cr);
+  }
+
+  /* --- podrast: kríky, paprade, kamene, padnuté kmene --- */
+  const bushN = terrain==="prales"? 130 : 90;
+  const bush=new THREE.InstancedMesh(new THREE.SphereGeometry(.7,7,5),
+    new THREE.MeshLambertMaterial({color:0x294a22}), bushN);
+  for(let i=0;i<bushN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+    setInst(bush,i,Math.cos(a)*d,rnd(.15,.3),Math.sin(a)*d, rnd(.6,1.6),rnd(.4,.8),rnd(.6,1.6),rnd(0,6.3)); }
+  const fernN = 120;
+  const fern=new THREE.InstancedMesh(new THREE.ConeGeometry(.5,.9,5),
+    new THREE.MeshLambertMaterial({color:0x3f7034}), fernN);
+  for(let i=0;i<fernN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+    setInst(fern,i,Math.cos(a)*d,.4,Math.sin(a)*d, rnd(.7,1.3),rnd(.7,1.4),rnd(.7,1.3),rnd(0,6.3),rnd(-.15,.15)); }
+  const rockN=44;
+  const rock=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.4,0),
+    new THREE.MeshLambertMaterial({color:0x6a6a60}), rockN);
+  for(let i=0;i<rockN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+    setInst(rock,i,Math.cos(a)*d,rnd(.05,.2),Math.sin(a)*d, rnd(.5,1.8),rnd(.4,1),rnd(.5,1.8),rnd(0,6.3)); }
+  const logN=16;
+  const log=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.26,3.2,6),
+    new THREE.MeshLambertMaterial({map:barkDark}), logN);
+  for(let i=0;i<logN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R*.9;
+    setInst(log,i,Math.cos(a)*d,.24,Math.sin(a)*d, 1,1,1, rnd(0,6.3), Math.PI/2); }
+  forestGroup.add(bush,fern,rock,log);
+  scene.add(forestGroup);
+
+  /* --- HUBY --- */
+  const pool = SPECIES.filter(s=>s.terr.includes(terrain));
+  const weights = pool.map(s=> s.type==="top"?0.9 : s.type==="edible"?1.4 : s.type==="inedible"?0.8 : 0.75);
+  const totalW = weights.reduce((a,b)=>a+b,0);
+  const baseCnt = terrain==="prales"? 40 : 32;
+  const cnt = baseCnt + Math.floor(Math.random()*8);
+  let placed=0, guard=0;
+  while(placed<cnt && guard++<cnt*30){
+    let r=Math.random()*totalW, sp=pool[0];
+    for(let j=0;j<pool.length;j++){ r-=weights[j]; if(r<=0){sp=pool[j];break} }
+    const tr=treePts[Math.floor(Math.random()*treePts.length)];
+    const a=Math.random()*6.283, d=rnd(.8,2.6);
+    const x=tr.x+Math.cos(a)*d, z=tr.z+Math.sin(a)*d;
+    if(Math.hypot(x,z)>WORLD_R) continue;
+    // trsy: kuriatka a líšky rastú v skupinkách
+    const clusterN = (sp.id==="kuriatko"||sp.id==="liska_or") ? 1+Math.floor(Math.random()*3) : 1;
+    for(let k=0;k<clusterN && placed<cnt;k++){
+      addShroom3D(sp, x+rnd(-.5,.5), z+rnd(-.5,.5)); placed++;
+    }
+  }
+  scene.add(shroomGroup);
+}
+
+/* ---------- 3D model huby z primitív ---------- */
+function shroomMesh(sp, scale){
+  const d=sp.draw, g=new THREE.Group();
+  const mat=c=>new THREE.MeshLambertMaterial({color:new THREE.Color(c)});
+  if(d.shape==="parasol"){
+    const stemH=.34*scale;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.018*scale,.026*scale,stemH,6),mat(d.stem));
+    stem.position.y=stemH/2; g.add(stem);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(.16*scale,.07*scale,9),mat(d.cap));
+    cap.position.y=stemH+.03*scale; g.add(cap);
+    const knob=new THREE.Mesh(new THREE.SphereGeometry(.028*scale,6,5),mat(d.scales||"#7a5a36"));
+    knob.position.y=stemH+.068*scale; g.add(knob);
+  } else if(d.shape==="funnel"){
+    const body=new THREE.Mesh(new THREE.CylinderGeometry(.085*scale,.018*scale,.13*scale,8),mat(d.cap));
+    body.position.y=.075*scale; g.add(body);
+  } else { // bun
+    const stemH=.13*scale, capR=.10*scale;
+    const stemR = d.stemBulb? .034*scale : .024*scale;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022*scale,stemR,stemH,7),mat(d.stem));
+    stem.position.y=stemH/2; g.add(stem);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(capR,9,7),mat(d.cap));
+    cap.scale.y=.62; cap.position.y=stemH+.01*scale; g.add(cap);
+    if(d.dots){ for(let i=0;i<7;i++){ const a=rnd(0,6.283), rr=rnd(.25,.85)*capR;
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(.011*scale,5,4),mat(d.dots));
+      dot.position.set(Math.cos(a)*rr, stemH+.01*scale+Math.sqrt(Math.max(0,capR*capR-rr*rr))*.62, Math.sin(a)*rr);
+      g.add(dot); } }
+    if(d.ring){ const ring=new THREE.Mesh(new THREE.TorusGeometry(.026*scale,.007*scale,5,10),
+      new THREE.MeshLambertMaterial({color:0xcfc4a4}));
+      ring.rotation.x=Math.PI/2; ring.position.y=stemH*.66; g.add(ring); }
+    if(d.volva){ const v=new THREE.Mesh(new THREE.SphereGeometry(.04*scale,7,5),mat("#ddd5be"));
+      v.scale.y=.5; v.position.y=.012*scale; g.add(v); }
+  }
+  // tieňový fliačik pod hubou — pomáha ju zbadať
+  const blob=new THREE.Mesh(new THREE.PlaneGeometry(.36*scale,.36*scale),
+    new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false}));
+  blob.rotation.x=-Math.PI/2; blob.position.y=.012; g.add(blob);
+  return g;
+}
+function addShroom3D(sp, x, z){
+  const scale=rnd(1.5,2.3); // mierne nadrozmerné kvôli čitateľnosti
+  const g=shroomMesh(sp,scale);
+  g.position.set(x,0,z); g.rotation.y=rnd(0,6.3);
+  const hit=new THREE.Mesh(new THREE.SphereGeometry(.34,6,5),
+    new THREE.MeshBasicMaterial({visible:false}));
+  hit.position.y=.2; g.add(hit);
+  const rec={sp, picked:false, seenBonus:false, group:g, hit, pos:new THREE.Vector3(x,0,z)};
+  hit.userData.rec=rec;
+  shrooms.push(rec); shroomGroup.add(g);
+}
+
+/* =====================================================
+   HRÁČ — pohyb, kamera, kolízie
+===================================================== */
+const player={x:0,z:14,yaw:Math.PI,pitch:-.05,bob:0};
+const keys={};
+addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+/* joystick */
+const joy={x:0,y:0,id:null};
+const joyEl=document.getElementById("joy"), knob=document.getElementById("knob");
+joyEl.addEventListener("pointerdown",e=>{ joy.id=e.pointerId; joyEl.setPointerCapture(e.pointerId); joyMove(e); });
+joyEl.addEventListener("pointermove",e=>{ if(e.pointerId===joy.id) joyMove(e); });
+const joyEnd=e=>{ if(e.pointerId===joy.id){ joy.id=null; joy.x=joy.y=0;
+  knob.style.transform="translate(-50%,-50%)"; } };
+joyEl.addEventListener("pointerup",joyEnd);
+joyEl.addEventListener("pointercancel",joyEnd);
+function joyMove(e){
+  const r=joyEl.getBoundingClientRect();
+  let dx=(e.clientX-(r.left+r.width/2))/(r.width/2), dy=(e.clientY-(r.top+r.height/2))/(r.height/2);
+  const m=Math.hypot(dx,dy); if(m>1){dx/=m;dy/=m;}
+  joy.x=dx; joy.y=dy;
+  knob.style.transform=`translate(calc(-50% + ${dx*32}px), calc(-50% + ${dy*32}px))`;
+}
+
+/* rozhliadanie + ťuknutie */
+const look={id:null,lx:0,ly:0,t:0,moved:0};
+const cvEl=document.getElementById("game");
+cvEl.addEventListener("pointerdown",e=>{
+  if(look.id!==null) return;
+  look.id=e.pointerId; look.lx=e.clientX; look.ly=e.clientY;
+  look.t=performance.now(); look.moved=0;
+  cvEl.setPointerCapture(e.pointerId);
+});
+cvEl.addEventListener("pointermove",e=>{
+  if(e.pointerId!==look.id) return;
+  const dx=e.clientX-look.lx, dy=e.clientY-look.ly;
+  look.lx=e.clientX; look.ly=e.clientY;
+  look.moved+=Math.abs(dx)+Math.abs(dy);
+  player.yaw -= dx*0.0042;
+  player.pitch = Math.max(-1.15, Math.min(1.15, player.pitch - dy*0.0034));
+});
+const lookEnd=e=>{
+  if(e.pointerId!==look.id) return;
+  const quick = performance.now()-look.t<300 && look.moved<10;
+  look.id=null;
+  if(quick) tapAt(e.clientX,e.clientY);
+};
+cvEl.addEventListener("pointerup",lookEnd);
+cvEl.addEventListener("pointercancel",e=>{ if(e.pointerId===look.id) look.id=null; });
+
+const ray=new THREE.Raycaster();
+const NDC=new THREE.Vector2();
+function tapAt(px,py){
+  NDC.set(px/innerWidth*2-1, -(py/innerHeight)*2+1);
+  ray.setFromCamera(NDC,camera);
+  const hits=ray.intersectObjects(shrooms.filter(s=>!s.picked).map(s=>s.hit));
+  if(!hits.length) return;
+  const rec=hits[0].object.userData.rec;
+  const d=Math.hypot(rec.pos.x-player.x, rec.pos.z-player.z);
+  if(d<3.4) openInspect(rec);
+  else toast("🥾 Podíď bližšie, z diaľky hubu nerozoznáš.");
+}
+document.getElementById("lupa").addEventListener("pointerdown",e=>{
+  e.stopPropagation();
+  if(nearestRec) openInspect(nearestRec);
+});
+
+/* =====================================================
+   SLUČKA
+===================================================== */
+let lastT=performance.now(), nearestRec=null;
+const lupaEl=document.getElementById("lupa");
+const OVERLAYS=["inspectOv","cleanOv","marketOv","menuOv","atlasOv","introOv"];
+const anyModal=()=>OVERLAYS.some(id=>!document.getElementById(id).classList.contains("hidden"));
+
+function animate(){
+  requestAnimationFrame(animate);
+  const now=performance.now(), dt=Math.min((now-lastT)/1000,.05); lastT=now;
+  const modal=anyModal();
+
+  if(!modal){
+    let mx=joy.x, mz=joy.y;
+    if(keys["w"]||keys["arrowup"]) mz-=1;
+    if(keys["s"]||keys["arrowdown"]) mz+=1;
+    if(keys["a"]||keys["arrowleft"]) mx-=1;
+    if(keys["d"]||keys["arrowright"]) mx+=1;
+    const mlen=Math.hypot(mx,mz);
+    if(mlen>0.08){
+      mx/=Math.max(1,mlen); mz/=Math.max(1,mlen);
+      const sp=(profile.up.boots?4.4:3.0);
+      const sin=Math.sin(player.yaw), cos=Math.cos(player.yaw);
+      // dopredu = smer pohľadu (joystick hore => mz<0)
+      player.x += (mx*cos - mz*sin)*sp*dt;
+      player.z += (-mx*sin - mz*cos)*sp*dt;
+      player.bob += dt*sp*2.2;
+      for(const t of treePts){
+        const dx=player.x-t.x, dz=player.z-t.z, dd=Math.hypot(dx,dz), min=t.r+.32;
+        if(dd<min && dd>0.001){ player.x=t.x+dx/dd*min; player.z=t.z+dz/dd*min; }
+      }
+      const dR=Math.hypot(player.x,player.z);
+      if(dR>WORLD_R){ player.x*=WORLD_R/dR; player.z*=WORLD_R/dR; }
+    } else player.bob*=0.9;
+  }
+
+  camera.position.set(player.x, 1.58 + Math.sin(player.bob)*0.035, player.z);
+  camera.rotation.order="YXZ";
+  camera.rotation.y=player.yaw; camera.rotation.x=player.pitch;
+
+  // bublina nad najbližšou hubou
+  nearestRec=null; let nd=3.2;
+  for(const s of shrooms){ if(s.picked) continue;
+    const d=Math.hypot(s.pos.x-player.x, s.pos.z-player.z);
+    if(d<nd){ nd=d; nearestRec=s; } }
+  if(nearestRec && !modal){
+    V3.set(nearestRec.pos.x, 0.55, nearestRec.pos.z).project(camera);
+    if(V3.z<1 && Math.abs(V3.x)<1.05 && Math.abs(V3.y)<1.05){
+      lupaEl.style.display="block";
+      lupaEl.style.left=((V3.x+1)/2*innerWidth)+"px";
+      lupaEl.style.top =((-V3.y+1)/2*innerHeight)+"px";
+    } else lupaEl.style.display="none";
+  } else lupaEl.style.display="none";
+
+  renderer.render(scene,camera);
+}
+
+/* =====================================================
+   2D ILUSTRÁCIE pre atlasové karty
+===================================================== */
+function drawMushroom2D(c,x,y,s,d,opts={}){
+  c.save(); c.translate(x,y); c.scale(s,s);
+  c.fillStyle="rgba(0,0,0,.18)"; c.beginPath(); c.ellipse(0,2,14,4,0,0,7); c.fill();
+  if(d.volva){ c.fillStyle="#ddd5be"; c.beginPath(); c.ellipse(0,0,7,5,0,0,7); c.fill(); }
+  c.fillStyle=d.stem||"#e8dcc2";
+  const sw=d.stemBulb?6.5:4.5;
+  c.beginPath(); c.moveTo(-4,-2); c.quadraticCurveTo(-sw,-12,-3.6,-22);
+  c.lineTo(3.6,-22); c.quadraticCurveTo(sw,-12,4,-2); c.closePath(); c.fill();
+  if(d.net){ c.strokeStyle=d.net; c.lineWidth=.6;
+    for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-4+i*2.4,-4); c.lineTo(-2+i*2.2,-20); c.stroke(); }
+    for(let i=0;i<3;i++){ c.beginPath(); c.moveTo(-4.5,-6-i*5); c.quadraticCurveTo(0,-4-i*5,4.5,-6-i*5); c.stroke(); } }
+  if(d.speckles){ c.fillStyle=d.speckles;
+    for(let i=0;i<10;i++){ c.fillRect(-3.5+(i%4)*2.2, -5-Math.floor(i/4)*5.5, 1.1, 1.6);} }
+  if(d.ring){ c.strokeStyle="rgba(120,100,70,.8)"; c.lineWidth=2;
+    c.beginPath(); c.ellipse(0,-15,5,2,0,0,7); c.stroke(); }
+  const capY=-22;
+  if(d.shape==="funnel"){
+    c.fillStyle=d.cap; c.beginPath();
+    c.moveTo(-13,capY-6); c.quadraticCurveTo(-4,capY+3,0,capY+2);
+    c.quadraticCurveTo(4,capY+3,13,capY-6);
+    c.quadraticCurveTo(6,capY-12,0,capY-11); c.quadraticCurveTo(-6,capY-12,-13,capY-6);
+    c.closePath(); c.fill();
+    if(d.ridges){ c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=.7;
+      for(let i=-3;i<=3;i++){ c.beginPath(); c.moveTo(i*1.4,capY+1); c.lineTo(i*3.4,capY-6); c.stroke(); } }
+    if(d.gills){ c.strokeStyle="rgba(120,70,20,.5)"; c.lineWidth=.45;
+      for(let i=-5;i<=5;i++){ c.beginPath(); c.moveTo(i*0.9,capY+1); c.lineTo(i*2.2,capY-5.5); c.stroke(); } }
+  } else if(d.shape==="parasol"){
+    c.fillStyle=d.under||"#f0ead6"; c.beginPath(); c.ellipse(0,capY,15,4,0,0,7); c.fill();
+    c.fillStyle=d.cap; c.beginPath();
+    c.moveTo(-15,capY); c.quadraticCurveTo(-10,capY-11,0,capY-13);
+    c.quadraticCurveTo(10,capY-11,15,capY); c.quadraticCurveTo(0,capY-4,-15,capY); c.fill();
+    c.fillStyle=d.scales||"#7a5a36";
+    [[-8,-4],[-2,-8],[5,-5],[0,-2],[9,-2],[-12,-1]].forEach(p=>{ c.beginPath(); c.ellipse(p[0],capY+p[1],1.8,1.2,0,0,7); c.fill(); });
+    c.beginPath(); c.ellipse(0,capY-11,2.6,1.8,0,0,7); c.fill();
+  } else {
+    c.fillStyle=d.under||"#e9e2c4"; c.beginPath(); c.ellipse(0,capY+1,12.5,3.5,0,0,7); c.fill();
+    const g=c.createLinearGradient(0,capY-13,0,capY+2);
+    g.addColorStop(0,d.capEdge||d.cap); g.addColorStop(1,d.cap);
+    c.fillStyle=g; c.beginPath();
+    c.moveTo(-13,capY+1); c.quadraticCurveTo(-13,capY-12,0,capY-12.5);
+    c.quadraticCurveTo(13,capY-12,13,capY+1);
+    c.quadraticCurveTo(0,capY-3,-13,capY+1); c.fill();
+    if(d.gloss){ c.fillStyle="rgba(255,255,255,.25)"; c.beginPath(); c.ellipse(-4,capY-8,5,2.2,-.4,0,7); c.fill(); }
+    if(d.dots){ c.fillStyle=d.dots;
+      [[-8,-4],[-3,-9],[4,-7],[9,-3],[0,-3],[7,-9.5],[-10,-8]].forEach(p=>{ c.beginPath(); c.ellipse(p[0],capY+p[1],1.7,1.2,0,0,7); c.fill(); }); }
+  }
+  if(opts.dirt){ opts.dirt.forEach(b=>{ if(b.done)return;
+    c.fillStyle="rgba(80,58,32,.95)"; c.beginPath(); c.ellipse(b.x,b.y,b.r,b.r*.75,b.a,0,7); c.fill();
+    c.fillStyle="rgba(120,95,55,.8)"; c.beginPath(); c.ellipse(b.x-b.r*.25,b.y-b.r*.2,b.r*.5,b.r*.35,b.a,0,7); c.fill(); }); }
+  c.restore();
+}
+
+/* =====================================================
+   UI — toasty, HUD, XP
+===================================================== */
+const $=id=>document.getElementById(id);
+function toast(msg,cls=""){ const t=document.createElement("div"); t.className="toast "+cls;
+  t.innerHTML=msg; $("toasts").appendChild(t); setTimeout(()=>t.remove(),4800); }
+function eur(x){ return x.toFixed(2).replace(".",",")+" €"; }
+function refreshHUD(){
+  const lv=LV(profile.xp), lo=lvlBase(lv), hi=lvlBase(lv+1);
+  $("lvltxt").textContent=`Hubár · Lv ${lv} · ${profile.xp} XP`;
+  $("xpfill").style.width=Math.min(100,(profile.xp-lo)/(hi-lo)*100)+"%";
+  $("money").textContent=profile.money.toFixed(2).replace(".",",");
+  $("basketCnt").textContent=basket.length; $("basketMax").textContent=basketMax();
+}
+function gainXP(n,why){
+  const before=LV(profile.xp);
+  profile.xp=Math.max(0,profile.xp+n);
+  const after=LV(profile.xp);
+  if(n>0) toast(`+${n} XP — ${why}`,"gold"); else toast(`${n} XP — ${why}`,"bad");
+  if(after>before) toast(`🎉 <b>Level ${after}!</b> ${unlockMsg(after)}`,"gold");
+  refreshHUD(); save();
+}
+function unlockMsg(lv){
+  const u=Object.entries(TERRAINS).find(([k,t])=>t.lvl===lv);
+  return u?`Odomkol si: ${u[1].ico} ${u[1].name}`:"Len tak ďalej!";
+}
+
+/* =====================================================
+   INŠPEKCIA / ČISTENIE / TRH / MENU / ATLAS
+===================================================== */
+function openInspect(rec){
+  currentInspect=rec;
+  const sp=rec.sp, hasAtlas=profile.up.atlas;
+  $("insName").textContent = hasAtlas? sp.name : "Neznáma huba";
+  $("insLatin").textContent = hasAtlas? sp.latin : "Urči ju podľa znakov…";
+  const ic=$("inspectCanvas").getContext("2d");
+  ic.clearRect(0,0,240,190);
+  drawMushroom2D(ic,120,150,4.2,sp.draw);
+  $("insTraits").innerHTML = sp.traits.map(t=>
+    `<div><b>${t[0]}</b><span>${t[2]?`<span class="chip" style="background:${t[2]}"></span>`:""}${t[1]}</span></div>`).join("");
+  $("insHint").textContent = hasAtlas? sp.hint : "💡 Atlas húb z trhu ti prezradí názov hneď.";
+  $("inspectOv").classList.remove("hidden");
+}
+$("btnLeave").onclick=()=>{
+  const m=currentInspect; $("inspectOv").classList.add("hidden");
+  if(m && (m.sp.type==="toxic"||m.sp.type==="inedible") && !m.seenBonus){
+    m.seenBonus=true; gainXP(4,"dobré oko — nebezpečnú hubu si nechal v lese");
+  }
+};
+$("btnPick").onclick=()=>{
+  const m=currentInspect; $("inspectOv").classList.add("hidden");
+  if(!m) return;
+  if(m.sp.type==="toxic"||m.sp.type==="inedible"){
+    m.picked=true; shroomGroup.remove(m.group);
+    gainXP(m.sp.xp, m.sp.warn||"zlá huba");
+    return;
+  }
+  if(basket.length>=basketMax()){ toast("🧺 Košík je plný! Choď predať na trh.","bad"); return; }
+  m.picked=true; shroomGroup.remove(m.group);
+  openClean(m);
+};
+
+function openClean(m){
+  const dirtN=1+Math.floor(Math.random()*3), dirt=[];
+  for(let i=0;i<dirtN;i++) dirt.push({x:rnd(-9,9),y:rnd(-26,-2),r:rnd(2.2,3.4),a:rnd(0,3),done:false});
+  currentClean={m,dirt};
+  $("cleanName").textContent = profile.up.atlas? m.sp.name : "Jedlá huba 🙂";
+  $("btnDoneClean").classList.add("hidden");
+  $("btnSkipClean").classList.remove("hidden");
+  $("cleanHint").textContent = profile.up.knife
+    ? "🔪 Hubársky nôž: ťukni raz a očistí všetko."
+    : "Ťukaj na špinu. Čistá huba má na trhu plnú cenu.";
+  renderClean();
+  $("cleanOv").classList.remove("hidden");
+}
+function renderClean(){
+  const c=$("cleanCanvas").getContext("2d");
+  c.clearRect(0,0,240,190);
+  drawMushroom2D(c,120,150,4.2,currentClean.m.sp.draw,{dirt:currentClean.dirt});
+  if(currentClean.dirt.every(b=>b.done)){
+    $("btnDoneClean").classList.remove("hidden");
+    $("btnSkipClean").classList.add("hidden");
+    $("cleanHint").textContent="✨ Čistučká! Taká sa predáva najlepšie.";
+  }
+}
+$("cleanCanvas").addEventListener("pointerdown",e=>{
+  if(!currentClean) return;
+  const r=e.target.getBoundingClientRect();
+  const x=((e.clientX-r.left)/r.width*240-120)/4.2, y=((e.clientY-r.top)/r.height*190-150)/4.2;
+  let hit=false;
+  currentClean.dirt.forEach(b=>{ if(!b.done && Math.hypot(b.x-x,b.y-y)<b.r+2.4){ b.done=true; hit=true; } });
+  if(profile.up.knife && hit) currentClean.dirt.forEach(b=>b.done=true);
+  if(hit) renderClean();
+});
+function finishClean(clean){
+  const m=currentClean.m;
+  basket.push({sp:m.sp, clean});
+  $("cleanOv").classList.add("hidden"); currentClean=null;
+  gainXP(m.sp.xp, m.sp.type==="top" ? `${m.sp.name} — prvotriedny úlovok!` : `${m.sp.name} do košíka`);
+  refreshHUD();
+}
+$("btnDoneClean").onclick=()=>finishClean(true);
+$("btnSkipClean").onclick=()=>finishClean(false);
+
+const SHOP=[
+ {id:"knife", name:"Hubársky nôž", price:12, desc:"Jedným ťuknutím očistíš celú hubu."},
+ {id:"atlas", name:"Atlas húb", price:20, desc:"Pri každej hube hneď vidíš jej názov a popis."},
+ {id:"boots", name:"Gumáky Tatra", price:15, desc:"Po lese sa hýbeš o polovicu rýchlejšie."},
+ {id:"basket1", name:"Prútený košík (12 miest)", price:10, desc:"Viac húb na jednu výpravu."},
+ {id:"basket2", name:"Krošňa (18 miest)", price:28, desc:"Košík skúseného hubára."}
+];
+function itemPrice(it){ return it.sp.price*(it.clean?1:0.55); }
+function openMarket(){
+  const L=$("marketList"); L.innerHTML="";
+  if(!basket.length) L.innerHTML='<div class="hintline" style="margin:10px 0">Košík je prázdny — les čaká.</div>';
+  const groups={};
+  basket.forEach(it=>{ const k=it.sp.id+(it.clean?"c":"d");
+    (groups[k]=groups[k]||{sp:it.sp,clean:it.clean,n:0}).n++; });
+  let total=0;
+  Object.values(groups).forEach(gr=>{
+    const p=gr.sp.price*(gr.clean?1:0.55)*gr.n; total+=p;
+    const row=document.createElement("div"); row.className="mrow";
+    row.innerHTML=`<span class="nm">${gr.n}× ${gr.sp.name}${gr.clean?"":' <span class="dirty">špinavá −45 %</span>'}</span>
+      <span class="price">${eur(p)}</span>`;
+    L.appendChild(row);
+  });
+  $("marketTotal").textContent=eur(total);
+  $("btnSellAll").disabled=!basket.length;
+  const S=$("shopList"); S.innerHTML="";
+  SHOP.forEach(s=>{
+    let owned=false, blocked=false;
+    if(s.id==="knife") owned=profile.up.knife;
+    if(s.id==="atlas") owned=profile.up.atlas;
+    if(s.id==="boots") owned=profile.up.boots;
+    if(s.id==="basket1") owned=profile.up.basket>=1;
+    if(s.id==="basket2"){ owned=profile.up.basket>=2; blocked=profile.up.basket<1; }
+    const row=document.createElement("div"); row.className="shoprow";
+    row.innerHTML=`<span>${s.name}<small>${s.desc}</small></span>`;
+    if(owned) row.innerHTML+=`<span class="owned">✓ máš</span>`;
+    else{
+      const b=document.createElement("button"); b.className="buy"; b.textContent=eur(s.price);
+      b.disabled = profile.money<s.price || blocked;
+      b.onclick=()=>{ profile.money-=s.price;
+        if(s.id==="knife")profile.up.knife=true;
+        if(s.id==="atlas")profile.up.atlas=true;
+        if(s.id==="boots")profile.up.boots=true;
+        if(s.id==="basket1")profile.up.basket=Math.max(profile.up.basket,1);
+        if(s.id==="basket2")profile.up.basket=2;
+        toast(`🛒 Kúpené: ${s.name}`,"gold"); save(); refreshHUD(); openMarket(); };
+      row.appendChild(b);
+    }
+    S.appendChild(row);
+  });
+  $("marketOv").classList.remove("hidden");
+}
+$("btnSellAll").onclick=()=>{
+  let total=0; basket.forEach(it=>total+=itemPrice(it));
+  const n=basket.length;
+  profile.money+=total; basket=[];
+  toast(`💶 Predal si ${n} húb za <b>${eur(total)}</b>.`,"gold");
+  gainXP(Math.max(2,Math.round(n*1.5)),"úspešný predaj na trhu");
+  save(); refreshHUD(); openMarket();
+};
+$("btnMarket").onclick=openMarket;
+
+function openMenu(){
+  const L=$("terrList"); L.innerHTML="";
+  const lv=LV(profile.xp);
+  Object.entries(TERRAINS).forEach(([k,t])=>{
+    const b=document.createElement("button"); b.className="terr"; b.disabled=lv<t.lvl;
+    b.innerHTML=`<span class="ico">${t.ico}</span><span><b>${t.name}</b>${k===terrain?" · si tu":""}<small>${t.desc}</small></span>`
+      +(lv<t.lvl?`<span class="lock">🔒 Lv ${t.lvl}</span>`:"");
+    b.onclick=()=>{ terrain=k; player.x=0; player.z=14; buildForest();
+      $("menuOv").classList.add("hidden");
+      toast(`${t.ico} Vošiel si do: <b>${t.name}</b>`); };
+    L.appendChild(b);
+  });
+  $("menuOv").classList.remove("hidden");
+}
+$("btnMenu").onclick=openMenu;
+$("btnDeeper").onclick=()=>{ player.x=0; player.z=14; buildForest();
+  toast("🥾 Prešiel si hlbšie do lesa — nové huby, nové šance."); };
+
+function openAtlas(){
+  const L=$("atlasList"); L.innerHTML="";
+  $("atlasTitle").textContent = profile.up.atlas? "Atlas húb" : "Atlas (ukážka)";
+  const list = profile.up.atlas? SPECIES : SPECIES.slice(0,3);
+  const tagN={top:["top","NAJ"],edible:["ed","JEDLÁ"],inedible:["ined","NEJEDLÁ"],toxic:["tox","JEDOVATÁ"]};
+  list.forEach(sp=>{
+    const row=document.createElement("div"); row.className="arow";
+    const c=document.createElement("canvas"); c.width=54; c.height=58;
+    drawMushroom2D(c.getContext("2d"),27,50,1.55,sp.draw);
+    const [cls,txt]=tagN[sp.type];
+    const info=document.createElement("div"); info.className="ainfo";
+    info.innerHTML=`<b>${sp.name}</b><span class="tag ${cls}">${txt}</span><br>
+      <i style="opacity:.6">${sp.latin}</i> · ${sp.price?`výkup ${eur(sp.price)}/ks`:"bez ceny"}<br>${sp.hint}`;
+    row.appendChild(c); row.appendChild(info); L.appendChild(row);
+  });
+  if(!profile.up.atlas){
+    const d=document.createElement("div"); d.className="hintline";
+    d.style.margin="12px 0 4px";
+    d.textContent="🔒 Kompletný atlas všetkých druhov kúpiš na trhu za 20 €.";
+    L.appendChild(d);
+  }
+  $("atlasOv").classList.remove("hidden");
+}
+$("btnAtlas").onclick=openAtlas;
+
+document.querySelectorAll(".closex").forEach(b=>b.onclick=()=>$(b.dataset.close).classList.add("hidden"));
+$("btnStart").onclick=()=>$("introOv").classList.add("hidden");
+
+/* =====================================================
+   ŠTART
+===================================================== */
+(async()=>{ await load(); buildForest(); refreshHUD(); animate(); })();
+</script>
+</body>
+</html>
