@@ -18,9 +18,10 @@
   #hud{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;
     padding:10px 12px;pointer-events:none;z-index:20;
     background:linear-gradient(180deg,rgba(8,16,10,.8),rgba(8,16,10,0));}
-  .pill{background:rgba(15,32,20,.85);border:1px solid rgba(243,234,212,.22);
-    border-radius:999px;padding:6px 12px;font-size:13.5px;display:flex;align-items:center;gap:6px;
-    white-space:nowrap}
+  .pill{background:rgba(12,26,16,.55);border:1px solid rgba(243,234,212,.16);
+    border-radius:999px;padding:7px 13px;font-size:13.5px;display:flex;align-items:center;gap:6px;
+    white-space:nowrap;backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
+    box-shadow:0 4px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.08)}
   #xpwrap{flex:1;min-width:88px;flex-direction:column;align-items:stretch}
   #xpbar{height:7px;border-radius:99px;background:rgba(243,234,212,.18);overflow:hidden;margin-top:3px}
   #xpfill{height:100%;width:0%;background:linear-gradient(90deg,var(--okra),var(--zlata));transition:width .4s}
@@ -28,24 +29,31 @@
 
   /* ---------- ovládanie ---------- */
   #joy{position:fixed;left:18px;bottom:calc(22px + env(safe-area-inset-bottom));width:118px;height:118px;
-    border-radius:50%;background:rgba(15,32,20,.45);border:1.5px solid rgba(243,234,212,.3);
+    border-radius:50%;background:rgba(12,26,16,.38);border:1px solid rgba(243,234,212,.20);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:inset 0 2px 10px rgba(0,0,0,.25);
     z-index:25;touch-action:none}
-  #knob{position:absolute;left:50%;top:50%;width:52px;height:52px;border-radius:50%;
-    background:rgba(243,234,212,.75);transform:translate(-50%,-50%);
-    box-shadow:0 3px 10px rgba(0,0,0,.45)}
+  #knob{position:absolute;left:50%;top:50%;width:50px;height:50px;border-radius:50%;
+    background:linear-gradient(180deg,rgba(250,244,226,.92),rgba(222,212,186,.92));
+    transform:translate(-50%,-50%);
+    box-shadow:0 4px 12px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6)}
   #sidebtns{position:fixed;right:12px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:25;
     display:flex;flex-direction:column;gap:9px}
-  .rbtn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(243,234,212,.3);
-    background:rgba(15,32,20,.78);color:var(--papier);font-size:21px;
-    display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .rbtn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(243,234,212,.18);
+    background:rgba(12,26,16,.55);color:var(--papier);font-size:21px;
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
+    box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.10);
+    transition:transform .12s ease}
   .rbtn:active{transform:scale(.93)}
   .rbtn.gold{background:var(--okra);color:var(--atrament);border:none}
 
   /* lupa pri hube */
   #lupa{position:fixed;z-index:22;transform:translate(-50%,-100%);display:none;
-    background:rgba(15,32,20,.88);border:1px solid rgba(243,234,212,.4);border-radius:999px;
-    padding:7px 14px;font-size:14px;pointer-events:auto;white-space:nowrap;
-    box-shadow:0 4px 14px rgba(0,0,0,.5)}
+    background:rgba(12,26,16,.70);border:1px solid rgba(243,234,212,.28);border-radius:999px;
+    padding:8px 15px;font-size:14px;pointer-events:auto;white-space:nowrap;
+    backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);
+    box-shadow:0 6px 20px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.08)}
   #lupa::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
     border:6px solid transparent;border-top-color:rgba(15,32,20,.88);border-bottom:none}
 
@@ -54,9 +62,11 @@
   @media (hover:hover) and (pointer:fine){ #deskhint{display:block} }
 
   button{font-family:inherit;cursor:pointer}
-  .btn{background:var(--okra);color:var(--atrament);border:none;border-radius:12px;
-    padding:11px 16px;font-size:15px;font-weight:bold;box-shadow:0 3px 0 rgba(0,0,0,.35)}
-  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .btn{background:linear-gradient(180deg,#d99a48,#bd7e30);color:var(--atrament);border:none;border-radius:13px;
+    padding:12px 16px;font-size:15px;font-weight:bold;
+    box-shadow:0 4px 12px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.35);
+    transition:transform .1s ease, box-shadow .1s ease}
+  .btn:active{transform:translateY(1px) scale(.985);box-shadow:0 2px 6px rgba(0,0,0,.28)}
   .btn.ghost{background:rgba(243,234,212,.14);color:var(--papier);border:1px solid rgba(243,234,212,.3)}
   .btn.green{background:var(--mach);color:var(--papier)}
 
@@ -64,12 +74,12 @@
   .overlay{position:fixed;inset:0;background:rgba(5,10,6,.74);z-index:40;display:flex;
     align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(2px)}
   .hidden{display:none!important}
-  .card{background:var(--papier);color:var(--atrament);border-radius:6px;max-width:430px;width:100%;
+  .card{background:var(--papier);color:var(--atrament);border-radius:14px;max-width:430px;width:100%;
     max-height:88vh;overflow-y:auto;padding:18px 18px 16px;position:relative;
-    box-shadow:0 18px 50px rgba(0,0,0,.55);
+    box-shadow:0 24px 70px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3);
     background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(43,36,23,.05) 28px)}
-  .card::before{content:"";position:absolute;inset:6px;border:1px solid rgba(43,36,23,.35);
-    border-radius:3px;pointer-events:none}
+  .card::before{content:"";position:absolute;inset:7px;border:1px solid rgba(43,36,23,.30);
+    border-radius:9px;pointer-events:none}
   .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65;text-align:center}
   .card h2{font-size:23px;text-align:center;margin:2px 0 0;font-style:italic}
   .latin{text-align:center;font-size:13px;opacity:.6;font-style:italic;margin-bottom:6px}
@@ -99,9 +109,11 @@
 
   #toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;display:flex;
     flex-direction:column;gap:8px;width:min(92vw,400px);pointer-events:none}
-  .toast{background:rgba(15,32,20,.95);border-left:4px solid var(--okra);color:var(--papier);
-    border-radius:8px;padding:10px 13px;font-size:14px;line-height:1.4;
-    animation:tin .25s ease,tout .4s ease 4.3s forwards;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .toast{background:rgba(12,26,16,.72);border-left:3px solid var(--okra);color:var(--papier);
+    border-radius:11px;padding:10px 14px;font-size:14px;line-height:1.4;
+    backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
+    animation:tin .25s ease,tout .4s ease 4.3s forwards;
+    box-shadow:0 8px 24px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.07)}
   .toast.bad{border-left-color:var(--mucho)}
   .toast.gold{border-left-color:var(--zlata)}
   @keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
@@ -153,6 +165,8 @@
   <button class="rbtn gold" id="btnMarket">🏪</button>
 </div>
 <div id="lupa">🔍 Obzrieť hubu</div>
+<div id="kompas" style="position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:21;
+  font-size:30px;display:none;pointer-events:none;text-shadow:0 2px 6px rgba(0,0,0,.6)">⬆️</div>
 <div id="deskhint">WASD / šípky = chôdza · ťahaj myšou = rozhliadanie · klik na hubu = inšpekcia</div>
 <div id="toasts"></div>
 
@@ -180,7 +194,8 @@
     <canvas id="cleanCanvas" width="240" height="190"></canvas>
     <div class="hintline" id="cleanHint">Ťukaj na špinu. Čistá huba má na trhu plnú cenu.</div>
     <div class="cardbtns">
-      <button class="btn ghost" id="btnSkipClean" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Hodiť do košíka špinavú</button>
+      <button class="btn ghost" id="btnTrash" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Nechať v lese 🚮</button>
+      <button class="btn ghost" id="btnSkipClean" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Do košíka špinavú</button>
       <button class="btn green hidden" id="btnDoneClean">Do košíka 🧺</button>
     </div>
   </div>
@@ -224,18 +239,43 @@
   </div>
 </div>
 
-<!-- HLAVNÉ MENU -->
+<!-- HLAVNÉ MENU / ONBOARDING -->
 <div class="overlay" id="introOv">
   <div class="card">
-    <div class="eyebrow">Lesná zberateľská hra · pohľad prvej osoby</div>
-    <h2>Vitaj v Mushroom Simulátore 🍄</h2>
-    <div class="hintline" style="margin-top:6px">Ráno po daždi, vôňa ihličia, prázdny košík.<br>Les je plný húb — ale len niektoré patria do kuchyne.</div>
-    <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px">
-      <button class="btn green" id="btnNew">🌱 Nová hra</button>
-      <button class="btn" id="btnLoad">📂 Načítať hru</button>
-      <button class="btn ghost" id="btnSet" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">⚙️ Nastavenia</button>
-      <button class="btn ghost" id="btnHelp" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">❓ Ako hrať</button>
+
+    <div id="introStep1">
+      <div class="eyebrow">Lesná zberateľská hra · pohľad prvej osoby</div>
+      <h2>Vitaj v Mushroom Simulátore 🍄</h2>
+      <canvas id="introArt" width="360" height="120" style="display:block;width:100%;margin:8px 0;border-radius:4px"></canvas>
+      <div class="hintline" style="margin:6px 0;font-size:14px">Ráno po daždi, vôňa ihličia, prázdny košík.<br>
+      Prejdeš osem lesov, naučíš sa rozoznávať huby podľa skutočných znakov,<br>
+      vybuduješ si meno na trhu — a možno nájdeš aj hľuzovku.</div>
+      <div class="cardbtns"><button class="btn green" id="btnIntroNext">Ďalej →</button></div>
     </div>
+
+    <div id="introStep2" class="hidden">
+      <div class="eyebrow">Zlaté pravidlo hubárov — v hre aj v živote</div>
+      <h2>⚠️ Zbieraj len to, čo poznáš</h2>
+      <div class="traits" style="margin-top:10px">
+        <div>🔍&nbsp; <b>Over si všetky znaky:</b> klobúk, spodok, hlúbik, prsteň aj pošvu v zemi. Jeden znak nestačí.</div>
+        <div>👯&nbsp; <b>Dvojníci klamú:</b> jedlé huby majú jedovatých dvojníkov, ktorí sa líšia v detailoch.</div>
+        <div>🤷&nbsp; <b>Pri pochybnosti nechaj hubu rásť.</b> Žiadna huba nestojí za zdravie.</div>
+        <div>📖&nbsp; Táto hra používa skutočné slovenské druhy a ich skutočné rozlišovacie znaky — čo sa naučíš tu, platí aj v lese.</div>
+      </div>
+      <div class="cardbtns"><button class="btn green" id="btnIntroOk">Rozumiem 🤝</button></div>
+    </div>
+
+    <div id="introStep3" class="hidden">
+      <div class="eyebrow">Mushroom Simulátor</div>
+      <h2>🍄 Menu</h2>
+      <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px">
+        <button class="btn green" id="btnNew">🌱 Nová hra</button>
+        <button class="btn" id="btnLoad">📂 Načítať hru</button>
+        <button class="btn ghost" id="btnSet" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">⚙️ Nastavenia</button>
+        <button class="btn ghost" id="btnHelp" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">❓ Ako hrať</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -252,6 +292,30 @@
   </div>
 </div>
 
+<!-- KUCHYŇA -->
+<div class="overlay hidden" id="cookOv">
+  <div class="card">
+    <button class="closex" data-close="cookOv">✕</button>
+    <div class="eyebrow">Tvoja kuchyňa</div>
+    <h2>🍳 Variť z úlovku</h2>
+    <div class="hintline" style="margin:6px 0">Uvarené jedlá predáš gazdinkám výhodnejšie než surové huby na trhu.</div>
+    <div id="cookList"></div>
+  </div>
+</div>
+
+<!-- PEŇAŽENKA -->
+<div class="overlay hidden" id="walletOv">
+  <div class="card">
+    <div class="eyebrow">Nález v lese</div>
+    <h2>👛 Stratená peňaženka</h2>
+    <div class="hintline" style="margin:8px 0">Vo vnútri je <b id="walletAmt">24 €</b> a občiansky preukaz nejakého turistu.</div>
+    <div class="cardbtns">
+      <button class="btn green" id="btnWalletReturn">Odovzdať na rázcestí</button>
+      <button class="btn ghost" id="btnWalletKeep" style="color:var(--atrament);border-color:rgba(43,36,23,.4)">Vziať si peniaze</button>
+    </div>
+  </div>
+</div>
+
 <!-- NASTAVENIA -->
 <div class="overlay hidden" id="setOv">
   <div class="card">
@@ -262,6 +326,8 @@
       <input type="checkbox" id="chkInvert" style="width:22px;height:22px"></label>
     <label class="shoprow" style="cursor:pointer"><span>Zvuky<small>Kroky, mince, level-up — všetko syntetizované.</small></span>
       <input type="checkbox" id="chkSound" style="width:22px;height:22px"></label>
+    <label class="shoprow" style="cursor:pointer"><span>Tiene<small>Mäkké tiene stromov a húb. Vypni, ak hra seká.</small></span>
+      <input type="checkbox" id="chkShadow" style="width:22px;height:22px"></label>
     <label class="shoprow" style="cursor:pointer"><span>Hustý les<small>Vypni na slabšom telefóne — prejaví sa pri vstupe do lesa.</small></span>
       <input type="checkbox" id="chkDense" style="width:22px;height:22px"></label>
     <div class="cardbtns"><button class="btn green" data-close="setOv">Hotovo</button></div>
@@ -294,7 +360,7 @@
 const SPECIES = [
  {id:"hrib_smrekovy", name:"Hríb smrekový", latin:"Boletus edulis", type:"top", price:3.8, xp:25,
   terr:["smrek","prales"],
-  draw:{cap:"#7a4a22",capEdge:"#c79a5c",shape:"bun",stem:"#e8dcc2",stemBulb:true,net:"#d8c9a8",under:"#e9e2c4"},
+  draw:{cap:"#6e3f1a",capEdge:"#e8d9b0",shape:"bun",gloss:true,stem:"#ece4cc",stemBulb:true,net:"#f6f0e0",under:"#efe9d2"},
   traits:[["Klobúk","hnedý, vypuklý ako žemľa","#7a4a22"],["Spodok","rúrky — mladé biele, neskôr žltozelené","#e9e2c4"],["Hlúbik","svetlý, bruchatý, s jemnou svetlou sieťkou","#e8dcc2"]],
   hint:"Pozor na dvojníka: hríb žlčový má ružovkasté rúrky a tmavú sieťku."},
 
@@ -391,14 +457,32 @@ const SPECIES = [
   terr:["dub","prales"],
   draw:{cap:"#2e2418",capEdge:"#453626",shape:"tuber",stem:"#2e2418",under:"#6b5a40"},
   traits:[["Tvar","čierna bradavičnatá hľuza — rastie <b>pod zemou</b>","#2e2418"],["Vôňa","silná, orechovo-zemitá",null],["Rastie","pri koreňoch dubov",null]],
-  hint:"Bez cvičeného psa ju nenájdeš. Najdrahšia huba našich lesov."}
+  hint:"Bez cvičeného psa ju nenájdeš. Najdrahšia huba našich lesov."},
+
+ {id:"modrak", name:"Hríb zrnitohlúbikový (modrák)", latin:"Neoboletus erythropus", type:"edible", price:1.5, xp:14,
+  terr:["dub","prales"],
+  draw:{cap:"#5e4226",capEdge:"#7a5836",shape:"bun",stem:"#e0a83a",stemBulb:true,speckles:"#b03520",under:"#b8401f"},
+  traits:[["Klobúk","tmavohnedý, zamatový ako semiš","#5e4226"],["Hlúbik","žltý, husto posiaty <b>červenými zrniečkami</b> (žiadna sieťka!)","#e0a83a"],["Spodok","rúrky <b>karmínovo červené</b>","#b8401f"],["Rez","bleskovo <b>atramentovo modrie</b>",null]],
+  hint:"Jedlý LEN po dôkladnej tepelnej úprave. Zrniečka na hlúbiku ho odlišujú od sieťkovaných hríbov."},
+
+ {id:"plavka_zelena", name:"Plávka zelenkastá", latin:"Russula virescens", type:"edible", price:1.8, xp:14,
+  terr:["dub","breza"],
+  draw:{cap:"#8aa05e",capEdge:"#a8bc7a",shape:"bun",stem:"#efece0",under:"#f0ead6"},
+  traits:[["Klobúk","zelenkastý, rozpukaný na políčka","#8aa05e"],["Spodok","biele krehké lupene","#f0ead6"],["Hlúbik","biely, <b>BEZ prsteňa a BEZ pošvy</b>","#efece0"]],
+  hint:"Vyzerá ako muchotrávka zelená! Rozdiel: plávka nemá prsteň ani pošvu a je krehká ako krieda. Over si bázu hlúbika!"},
+
+ {id:"podpnovka", name:"Podpňovka obyčajná", latin:"Armillaria mellea", type:"edible", price:0.8, xp:7,
+  terr:["smrek","prales"],
+  draw:{cap:"#c89a52",capEdge:"#dab470",shape:"bun",slim:true,stem:"#e8dcb8",ring:true,under:"#e4d8b8",dots:"#6e5430"},
+  traits:[["Klobúk","medovo hnedý s drobnými šupinkami","#b08a4a"],["Rastie","v trsoch na pňoch a dreve",null],["Hlúbik","s prsteňom, tuhý","#a8895a"]],
+  hint:"Opeňky — rastú v chumáčoch na pňoch. Jedlé len uvarené, hlúbiky sa nejedia."}
 ];
 
 const TERRAINS = {
  doma:{name:"Doma", ico:"🏡", lvl:1, desc:"Tvoj dvor pod horou — odtiaľto vyrážaš na huby.",
    trees:"spruce", fog:"#36502f", sky:"#d4e3ae", ground:"#42592e", floor:"grass", fogD:.024},
  smrek:{name:"Smrekový les", ico:"🌲", lvl:1, desc:"Hríby smrekové, masliaky, kuriatka… a horčiaky.",
-   trees:"spruce", fog:"#2a3c26", sky:"#9fb98a", ground:"#46361f", floor:"needle", fogD:.027},
+   trees:"spruce", fog:"#46523e", sky:"#dde4d0", ground:"#46361f", floor:"needle", fogD:.027},
  dub:{name:"Dubina", ico:"🌳", lvl:3, desc:"Hríby dubové a bedle. Pozor na muchotrávku zelenú!",
    trees:"oak", fog:"#33482a", sky:"#b3c490", ground:"#4a4226", floor:"leaf", fogD:.030},
  breza:{name:"Brezový háj", ico:"🍃", lvl:5, desc:"Kozáky, vatovce a červené muchotrávky.",
@@ -407,7 +491,7 @@ const TERRAINS = {
    trees:"mixed", fog:"#1d3320", sky:"#8aa87c", ground:"#3a2f1c", floor:"needle", fogD:.040},
  buk:{name:"Bučina", ico:"🍂", lvl:10, desc:"Hladké sivé kmene a hlboké lístie. Bedle, bronzové hríby — a najviac zelených muchotráviek.",
    trees:"beech", fog:"#3a4226", sky:"#c9cf96", ground:"#4e4226", floor:"leaf", fogD:.032,
-   pool:["bedla","hrib_bronzovy","kuriatko","suchohrib","mucho_zelena","horciak"]},
+   pool:["bedla","hrib_bronzovy","kuriatko","suchohrib","mucho_zelena","horciak","modrak"]},
  horska:{name:"Horská smrečina", ico:"⛰️", lvl:12, desc:"Studená hmla pod hrebeňom. Menej húb, ale hríb tu rastie ako nikde.",
    trees:"spruce", fog:"#2c3a32", sky:"#aebfa8", ground:"#403322", floor:"needle", fogD:.048,
    pool:["hrib_smrekovy","kuriatko","suchohrib","masliak","mucho_cervena","horciak"],
@@ -418,20 +502,20 @@ const TERRAINS = {
    cntMul:1.15},
  stara_dubina:{name:"Stará dubina", ico:"🌳👑", lvl:16, desc:"Storočné duby. Hľuzovkový raj — ak máš psa.",
    trees:"oak", fog:"#2e3a20", sky:"#a8b486", ground:"#443a20", floor:"leaf", fogD:.036,
-   pool:["hrib_dubovy","hrib_bronzovy","bedla","mucho_zelena","horciak","hluzovka"],
+   pool:["hrib_dubovy","hrib_bronzovy","bedla","mucho_zelena","plavka_zelena","horciak","hluzovka"],
    truffleBoost:true}
 };
 
 /* =====================================================
    STAV + ULOŽENIE
 ===================================================== */
-const profile = { xp:0, money:0, up:{knife:false,atlas:false,boots:false,basket:0,dog:false},
+const profile = { xp:0, money:0, up:{knife:false,atlas:false,boots:false,basket:0,dog:false,lamp:false,compass:false,dryer:false,babeta:false},
   found:{}, badges:{}, big:null,
   stats:{found:0,earned:0,avoided:0,ordersDone:0,prizeFound:0,bigDone:0},
-  settings:{invert:true,dense:true,sound:true} };
+  settings:{invert:true,dense:true,sound:true,shadows:true} };
 let terrain="doma", basket=[], orders=[], weather=null;
 function resetProfile(){ profile.xp=0; profile.money=0;
-  profile.up={knife:false,atlas:false,boots:false,basket:0,dog:false};
+  profile.up={knife:false,atlas:false,boots:false,basket:0,dog:false,lamp:false,compass:false,dryer:false,babeta:false};
   profile.found={}; profile.badges={}; profile.big=null;
   profile.stats={found:0,earned:0,avoided:0,ordersDone:0,prizeFound:0,bigDone:0};
   basket=[]; orders=[]; weather=null; }
@@ -452,21 +536,32 @@ async function load(){ let v=null;
   try{ if(window.storage){ const r=await window.storage.get("hubar-profil"); if(r&&r.value) v=r.value; } }catch(e){}
   if(!v){ try{ v=localStorage.getItem("hubar-profil"); }catch(e){} }
   if(v){ try{ const p=JSON.parse(v); Object.assign(profile,p);
-    profile.up=Object.assign({knife:false,atlas:false,boots:false,basket:0,dog:false},p.up);
+    profile.up=Object.assign({knife:false,atlas:false,boots:false,basket:0,dog:false,lamp:false,compass:false,dryer:false,babeta:false},p.up);
     profile.found=p.found||{}; profile.badges=p.badges||{}; profile.big=p.big||null;
     profile.stats=Object.assign({found:0,earned:0,avoided:0,ordersDone:0,prizeFound:0,bigDone:0},p.stats);
-    profile.settings=Object.assign({invert:true,dense:true,sound:true},p.settings); }catch(e){} }
+    profile.settings=Object.assign({invert:true,dense:true,sound:true,shadows:true},p.settings); }catch(e){} }
 }
 
 /* =====================================================
    THREE.JS — SCÉNA
 ===================================================== */
 const WORLD_R = 78;            // polomer lesa v metroch
+let HAMP=1, sunDir=[55,26,40];                    // amplitúda kopcov (0 = rovina doma)
+function gH(x,z){ if(!HAMP) return 0;
+  return (Math.sin(x*.045+1.3)*Math.cos(z*.05+.7)*1.1
+        + Math.sin((x+z)*.021+2)*.55
+        + Math.cos(x*.013-z*.017)*.6)*HAMP; }
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.08, 220);
 const renderer = new THREE.WebGLRenderer({canvas:document.getElementById("game"), antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
 renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;                  // správne farby
+renderer.toneMapping = THREE.ACESFilmicToneMapping;            // filmový kontrast
+renderer.toneMappingExposure = 1.06;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+function sRGBTex(c){ const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t; }
 addEventListener("resize",()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight); });
 
@@ -474,6 +569,13 @@ const hemi = new THREE.HemisphereLight(0xeaf2cf, 0x2a3a20, 1.18);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff2cf, 0.95);
 sun.position.set(30,55,18); scene.add(sun);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left=-32; sun.shadow.camera.right=32;
+sun.shadow.camera.top=32; sun.shadow.camera.bottom=-32;
+sun.shadow.camera.near=5; sun.shadow.camera.far=140;
+sun.shadow.bias=-0.0008;
+scene.add(sun.target);
 
 /* =====================================================
    ZVUK — syntetizovaný, bez súborov
@@ -553,11 +655,11 @@ function makeGroundTexture(base, kind){
       x.beginPath(); x.moveTo(px,py); x.lineTo(px+Math.cos(a)*7,py+Math.sin(a)*7); x.stroke();
     }
   }
-  const t=new THREE.CanvasTexture(c);
+  const t=sRGBTex(c);
   t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(22,22);
   return t;
 }
-function makeBarkTexture(base, marks){
+function makeBarkTexture(base, marks, knots){
   const c=document.createElement("canvas"); c.width=128; c.height=256; const x=c.getContext("2d");
   x.fillStyle=base; x.fillRect(0,0,128,256);
   for(let i=0;i<60;i++){ x.fillStyle=`rgba(0,0,0,${rnd(.06,.2)})`;
@@ -565,11 +667,18 @@ function makeBarkTexture(base, marks){
   if(marks) for(let i=0;i<26;i++){ x.fillStyle=`rgba(25,22,16,${rnd(.6,.95)})`;
     const w=rnd(8,30); x.beginPath();
     x.ellipse(Math.random()*128, Math.random()*256, w, rnd(2,5),0,0,7); x.fill(); }
-  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+  if(knots) for(let i=0;i<34;i++){ // hrče po odpadnutých konároch ako na fotke
+    const kx=Math.random()*128, ky=Math.random()*256, kr=rnd(2,5.5);
+    x.fillStyle="rgba(20,16,10,.85)";
+    x.beginPath(); x.ellipse(kx,ky,kr,kr*.8,0,0,7); x.fill();
+    x.fillStyle="rgba(190,180,160,.25)";
+    x.beginPath(); x.ellipse(kx,ky-kr*.9,kr*.8,kr*.35,0,0,7); x.fill(); }
+  const t=sRGBTex(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
 }
 const barkDark = makeBarkTexture("#4a3520",false);
 const barkBirch = makeBarkTexture("#e6e2d4",true);
 const barkBeech = makeBarkTexture("#9a948a",false);
+const barkSpruce = makeBarkTexture("#6e6256",false,true);
 function foliageTex(base, dark, light, needles){
   const c=document.createElement("canvas"); c.width=c.height=128; const x=c.getContext("2d");
   x.fillStyle=base; x.fillRect(0,0,128,128);
@@ -581,7 +690,7 @@ function foliageTex(base, dark, light, needles){
     for(let i=0;i<260;i++){ x.fillStyle=Math.random()<.5?dark:light;
       x.beginPath(); x.ellipse(Math.random()*128,Math.random()*128,rnd(2,5),rnd(1.5,4),rnd(0,3),0,7); x.fill(); }
   }
-  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(3,3);
+  const t=sRGBTex(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(3,3);
   return t;
 }
 const needleT  = foliageTex("#1f4426","#152e1a","#3a6b40",true);
@@ -592,7 +701,17 @@ const blobC=document.createElement("canvas"); blobC.width=blobC.height=64;
 { const x=blobC.getContext("2d"); const g=x.createRadialGradient(32,32,2,32,32,30);
   g.addColorStop(0,"rgba(0,0,0,.45)"); g.addColorStop(1,"rgba(0,0,0,0)");
   x.fillStyle=g; x.fillRect(0,0,64,64); }
-const blobTex=new THREE.CanvasTexture(blobC);
+const blobTex=sRGBTex(blobC);
+/* textúra vody — svetlé prúžky prúdenia */
+const waterTex=(()=>{ const c=document.createElement("canvas"); c.width=128; c.height=64;
+  const x=c.getContext("2d");
+  x.fillStyle="#4a7888"; x.fillRect(0,0,128,64);
+  for(let i=0;i<26;i++){ x.strokeStyle=`rgba(220,240,245,${rnd(.08,.22)})`;
+    x.lineWidth=rnd(.7,1.8); const py=Math.random()*64;
+    x.beginPath(); x.moveTo(0,py); x.bezierCurveTo(40,py+rnd(-5,5),90,py+rnd(-5,5),128,py); x.stroke(); }
+  const t=sRGBTex(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(3,1);
+  return t; })();
+let streamMat=null;
 
 /* textúry hlúbikov — sieťka hríbov, šupinky kozáka, hadia kresba bedle */
 function stemTex(base, mark, type){
@@ -613,14 +732,14 @@ function stemTex(base, mark, type){
   const tg=x.createLinearGradient(0,0,0,32);   // tieň hore pod klobúkom (flipY: vrch hlúbika = vrch canvasu)
   tg.addColorStop(0,"rgba(30,20,10,.34)"); tg.addColorStop(1,"rgba(30,20,10,0)");
   x.fillStyle=tg; x.fillRect(0,0,64,32);
-  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+  const t=sRGBTex(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
 }
 function skyTex(top,horizon){
   const c=document.createElement("canvas"); c.width=4; c.height=128; const x=c.getContext("2d");
   const g=x.createLinearGradient(0,0,0,128);
   g.addColorStop(0,top); g.addColorStop(.62,horizon); g.addColorStop(1,horizon);
   x.fillStyle=g; x.fillRect(0,0,4,128);
-  return new THREE.CanvasTexture(c);
+  return sRGBTex(c);
 }
 /* klobúk so zavinutým okrajom — profil MUSÍ ísť zdola nahor, inak sú normály naruby */
 function capGeo(r,h,k){
@@ -668,7 +787,18 @@ function funnelGeo(r,h){
 }
 
 /* ---------- skupiny, ktoré sa pri zmene lesa rušia ---------- */
-let forestGroup=null, shroomGroup=null, ground=null, skyDome=null, homeSmoke=[], butterflies=[], picksTw=[];
+let forestGroup=null, shroomGroup=null, ground=null, skyDome=null, homeSmoke=[], butterflies=[], picksTw=[], dustPts=null, deer=null, fairyRing=null, boar=null, wallet=null;
+function enableShadows(grp){
+  grp.traverse(o=>{
+    if(o.isPoints) return;
+    if(o.isMesh||o.isInstancedMesh){
+      const m=o.material;
+      if(m && m.transparent) { o.receiveShadow=false; return; }
+      o.castShadow = profile.settings.shadows!==false;
+      o.receiveShadow = true;
+    }
+  });
+}
 function updateLeft(){ const el=document.getElementById("shroomLeft");
   if(el) el.textContent=shrooms.filter(s=>!s.picked).length; }
 function applyTimeOfDay(){
@@ -679,6 +809,7 @@ function applyTimeOfDay(){
   ];
   const t = terrain==="doma" ? TOD[0] : TOD[Math.floor(Math.random()*TOD.length)];
   sun.color.setHex(t.sun); sun.intensity=t.int; sun.position.set(...t.pos);
+  sunDir=t.pos.slice();
   hemi.intensity=t.hemi;
   return t;
 }
@@ -689,7 +820,8 @@ function addButterflies(){
     const m=new THREE.Mesh(new THREE.PlaneGeometry(.16,.12),
       new THREE.MeshBasicMaterial({color:cols[i%3],side:THREE.DoubleSide}));
     const a=Math.random()*6.283, d=rnd(4,26);
-    butterflies.push({m, ax:Math.cos(a)*d, az:Math.sin(a)*d, ph:rnd(0,9), sp:rnd(.5,1.1)});
+    const bx=Math.cos(a)*d, bz=Math.sin(a)*d;
+    butterflies.push({m, ax:bx, az:bz, gy:gH(bx,bz), ph:rnd(0,9), sp:rnd(.5,1.1)});
     forestGroup.add(m);
   }
 }
@@ -709,7 +841,7 @@ function buildForest(){
   if(ground) scene.remove(ground);
   if(skyDome) scene.remove(skyDome);
   forestGroup=new THREE.Group(); shroomGroup=new THREE.Group();
-  shrooms=[]; treePts=[]; homeSmoke=[]; butterflies=[]; picksTw=[];
+  shrooms=[]; treePts=[]; homeSmoke=[]; butterflies=[]; picksTw=[]; dustPts=null; streamMat=null; deer=null; fairyRing=null; boar=null; wallet=null;
   const T=TERRAINS[terrain];
   const tod=applyTimeOfDay();
 
@@ -725,11 +857,17 @@ function buildForest(){
       c.setRGB(v*rnd(.92,1.02),v,v*rnd(.88,1)); mesh.setColorAt(i,c); }
     if(mesh.instanceColor) mesh.instanceColor.needsUpdate=true; };
 
-  // zem
-  ground = new THREE.Mesh(
-    new THREE.CircleGeometry(WORLD_R+40, 40),
-    new THREE.MeshLambertMaterial({map:makeGroundTexture(T.ground, T.floor)}));
-  ground.rotation.x=-Math.PI/2; scene.add(ground);
+  // zem — zvlnený terén ako na fotkách
+  HAMP = terrain==="doma" ? 0 : 1;
+  {
+    const gg=new THREE.PlaneGeometry((WORLD_R+40)*2,(WORLD_R+40)*2,72,72);
+    gg.rotateX(-Math.PI/2);
+    const gp=gg.attributes.position;
+    for(let i=0;i<gp.count;i++) gp.setY(i, gH(gp.getX(i),gp.getZ(i)));
+    gg.computeVertexNormals();
+    ground = new THREE.Mesh(gg, new THREE.MeshLambertMaterial({map:makeGroundTexture(T.ground, T.floor)}));
+  }
+  scene.add(ground);
 
   const DF = (profile.settings && profile.settings.dense) ? 1 : .55;
 
@@ -739,7 +877,7 @@ function buildForest(){
     { const x=plankC.getContext("2d"); x.fillStyle="#7a5530"; x.fillRect(0,0,128,128);
       for(let i=0;i<8;i++){ x.fillStyle=`rgba(40,26,12,${.25+Math.random()*.2})`;
         x.fillRect(0,i*16,128,2); x.fillStyle=`rgba(255,230,180,.06)`; x.fillRect(0,i*16+3,128,4); } }
-    const plank=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(plankC)});
+    const plank=new THREE.MeshLambertMaterial({map:sRGBTex(plankC)});
     const cab=new THREE.Group();
     const body=new THREE.Mesh(new THREE.BoxGeometry(5,2.6,3.8),plank); body.position.y=1.3; cab.add(body);
     const r1=new THREE.Mesh(new THREE.BoxGeometry(5.8,.16,2.7),new THREE.MeshLambertMaterial({color:0x5a3a26}));
@@ -806,6 +944,27 @@ function buildForest(){
     const grav=new THREE.Mesh(new THREE.CircleGeometry(2.6,12),
       new THREE.MeshLambertMaterial({color:0x9a917e}));
     grav.rotation.x=-Math.PI/2; grav.position.set(5.6,.015,-1.5); forestGroup.add(grav);
+    // zátišie: košík s hubami pri chodníku (kulisa úvodného menu)
+    { const weave=document.createElement("canvas"); weave.width=64; weave.height=64;
+      const wx=weave.getContext("2d"); wx.fillStyle="#8a5e32"; wx.fillRect(0,0,64,64);
+      for(let i=0;i<8;i++){ wx.fillStyle=i%2?"rgba(50,32,14,.4)":"rgba(220,180,120,.25)";
+        wx.fillRect(0,i*8,64,4); }
+      const wt=sRGBTex(weave);
+      const bowlPts=[]; for(let i=0;i<=6;i++){ const t=i/6;
+        bowlPts.push(new THREE.Vector2(.10+t*.16, t*.20)); }
+      const bowl=new THREE.Mesh(new THREE.LatheGeometry(bowlPts,12),
+        new THREE.MeshLambertMaterial({map:wt,side:THREE.DoubleSide}));
+      bowl.position.set(1.1,0,2.4); forestGroup.add(bowl);
+      const hndl=new THREE.Mesh(new THREE.TorusGeometry(.20,.022,5,12),
+        new THREE.MeshLambertMaterial({color:0x6e4a26}));
+      hndl.position.set(1.1,.20,2.4); forestGroup.add(hndl);
+      const sh1=shroomMesh(SPECIES.find(s=>s.id==="hrib_smrekovy"),1.4);
+      sh1.position.set(1.1,.16,2.4); sh1.rotation.z=.5; forestGroup.add(sh1);
+      const sh2=shroomMesh(SPECIES.find(s=>s.id==="kuriatko"),1.3);
+      sh2.position.set(1.42,0,2.2); forestGroup.add(sh2);
+      const sh3=shroomMesh(SPECIES.find(s=>s.id==="hrib_dubovy"),1.7);
+      sh3.position.set(.78,0,2.66); forestGroup.add(sh3);
+      treePts.push({x:1.1,z:2.4,r:.35}); }
     // tabuľa s menom chaty
     { const tc=document.createElement("canvas"); tc.width=256; tc.height=96;
       const tx=tc.getContext("2d");
@@ -814,7 +973,7 @@ function buildForest(){
       tx.fillStyle="#3a2c18"; tx.font="bold 34px Georgia"; tx.textAlign="center"; tx.textBaseline="middle";
       tx.fillText(`Chata ${profile.name||"Hubárov"}`,128,50);
       const board=new THREE.Mesh(new THREE.PlaneGeometry(2.0,.75),
-        new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(tc)}));
+        new THREE.MeshLambertMaterial({map:sRGBTex(tc)}));
       const bp1=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,1.5,6),
         new THREE.MeshLambertMaterial({color:0x5a4128}));
       const bp2=bp1.clone();
@@ -832,13 +991,21 @@ function buildForest(){
     for(let i=0;i<postN;i++){ const a=i/postN*6.283;
       setInst(posts,i,Math.cos(a)*11,.48,Math.sin(a)*11-2,1,1,1,a); }
     forestGroup.add(posts);
-    // rázcestník
+    // rázcestník s čitateľnými šípkami
+    const plate=(txt)=>{ const tc=document.createElement("canvas"); tc.width=256; tc.height=64;
+      const tx=tc.getContext("2d");
+      tx.fillStyle="#c9a35e"; tx.fillRect(0,0,256,64);
+      tx.strokeStyle="#5a4128"; tx.lineWidth=6; tx.strokeRect(3,3,250,58);
+      tx.fillStyle="#3a2c18"; tx.font="bold 30px Georgia"; tx.textAlign="center"; tx.textBaseline="middle";
+      tx.fillText(txt,128,34);
+      return new THREE.MeshLambertMaterial({map:sRGBTex(tc)}); };
     const sign=new THREE.Group();
     const pole=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,1.9,6),new THREE.MeshLambertMaterial({color:0x5a4128}));
     pole.position.y=.95; sign.add(pole);
-    const arrow=new THREE.Mesh(new THREE.BoxGeometry(1.0,.24,.05),new THREE.MeshLambertMaterial({color:0xc9a35e}));
+    const arrow=new THREE.Mesh(new THREE.BoxGeometry(1.05,.26,.05),plate("LESY ⟶"));
     arrow.position.set(.3,1.6,0); arrow.rotation.y=-.5; sign.add(arrow);
-    const arrow2=arrow.clone(); arrow2.position.y=1.3; arrow2.rotation.y=2.4; sign.add(arrow2);
+    const arrow2=new THREE.Mesh(new THREE.BoxGeometry(1.05,.26,.05),plate("⟵ NA HUBY"));
+    arrow2.position.set(-.1,1.3,0); arrow2.rotation.y=2.4; sign.add(arrow2);
     sign.position.set(3.2,0,4.5); forestGroup.add(sign);
     treePts.push({x:3.2,z:4.5,r:.3});
     // chodník od dverí
@@ -867,6 +1034,8 @@ function buildForest(){
     tint(gr); forestGroup.add(gr);
     addButterflies();
     scene.add(forestGroup); scene.add(shroomGroup);
+    ground.receiveShadow=true;
+    enableShadows(forestGroup);
     updateLeft();
     return;
   }
@@ -879,6 +1048,9 @@ function buildForest(){
            {id:"rain",ico:"🌧️",name:"Po daždi",cnt:1.5,fog:1.15,price:1,rare:1},
            {id:"fogw",ico:"🌫️",name:"Hustá hmla",cnt:.9,fog:1.8,price:1,rare:2.2},
            {id:"dry",ico:"🥵",name:"Sucho",cnt:.55,fog:.85,price:1.3,rare:1}];
+  { const today=new Date().toISOString().slice(0,10);
+    if(profile.lastDay!==today){ profile.lastDay=today;
+      setTimeout(()=>gainXP(25,"prvá výprava dňa — denný bonus ☀️"),900); } }
   weather=W[Math.floor(Math.random()*W.length)];
   scene.fog.density *= weather.fog;
   toast(`${weather.ico} <b>${weather.name}</b> · ${tod.n}${weather.id==="rain"?" — huby vyrazili!":weather.id==="dry"?" — málo húb, ale trh platí +30 %":weather.id==="fogw"?" — vzácne druhy milujú hmlu":""}`);
@@ -892,26 +1064,35 @@ function buildForest(){
       do{ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
         x=Math.cos(a)*d; z=Math.sin(a)*d; tries++;
       }while(tries<8 && Math.hypot(x,z)<5); // voľné miesto okolo štartu
-      pts.push({x,z}); treePts.push({x,z,r:rad}); }
+      pts.push({x,z,h:gH(x,z)}); treePts.push({x,z,r:rad}); }
     return pts; };
 
   // SMREK: vysoký kmeň + 5 poschodí koruny — vrstvená silueta
+  // SMREK podľa fotiek: vysoký holý kmeň, koruna až vysoko, machové korene
   if(counts.spruce){
     const p=place(counts.spruce,0.42);
-    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.13,.30,3.6,7),
-      new THREE.MeshLambertMaterial({map:barkDark}), p.length);
-    const tiers=[ [2.5,3.0,2.9,needleT],[2.05,2.8,4.4,needleT2],[1.6,2.6,5.9,needleT],
-                  [1.15,2.4,7.3,needleT2],[0.62,2.0,8.6,needleT2] ];
+    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.13,.34,9.5,7),
+      new THREE.MeshLambertMaterial({map:barkSpruce}), p.length);
+    const baseCol=new THREE.InstancedMesh(new THREE.CylinderGeometry(.36,.52,.6,7),
+      new THREE.MeshLambertMaterial({color:0x2c2a20}), p.length);
+    const flare=new THREE.InstancedMesh(new THREE.BoxGeometry(1.15,.16,.22),
+      new THREE.MeshLambertMaterial({color:0x4c7036}), p.length*3);
+    const tiers=[ [1.95,3.6,7.3,needleT],[1.5,3.1,9.0,needleT2],
+                  [1.0,2.5,10.5,needleT],[0.5,1.8,11.7,needleT2] ];
     const tierMeshes=tiers.map(t=>new THREE.InstancedMesh(
       new THREE.ConeGeometry(t[0],t[1],9),
       new THREE.MeshLambertMaterial({map:t[3]}), p.length));
     p.forEach((q,i)=>{ const s=rnd(.75,1.5), ry=rnd(0,6.3);
-      setInst(trunk,i,q.x,1.8*s,q.z, s,s,s, ry);
+      setInst(trunk,i,q.x,q.h+4.75*s,q.z, s,s,s, ry);
+      setInst(baseCol,i,q.x,q.h+.28*s,q.z, s,s,s, ry);
+      for(let k=0;k<3;k++){ const fa=ry+k*2.09+rnd(-.3,.3);
+        setInst(flare,i*3+k, q.x+Math.cos(fa)*.55*s, q.h+.07, q.z-Math.sin(fa)*.55*s,
+          s*rnd(.8,1.2), 1, s*rnd(.8,1.2), fa); }
       tiers.forEach((t,k)=> setInst(tierMeshes[k],i,
-        q.x+rnd(-.08,.08)*s, t[2]*s, q.z+rnd(-.08,.08)*s,
+        q.x+rnd(-.08,.08)*s, q.h+t[2]*s, q.z+rnd(-.08,.08)*s,
         s*rnd(.92,1.08), s*rnd(.9,1.1), s*rnd(.92,1.08), ry)); });
-    tierMeshes.forEach(m=>tint(m));
-    forestGroup.add(trunk,...tierMeshes);
+    tierMeshes.forEach(m=>tint(m)); tint(flare);
+    forestGroup.add(trunk,baseCol,flare,...tierMeshes);
   }
   // DUB: hrubý kmeň + konár + 3 laloky koruny
   if(counts.oak){
@@ -927,11 +1108,11 @@ function buildForest(){
     const cr3=new THREE.InstancedMesh(new THREE.SphereGeometry(1.2,8,6),
       new THREE.MeshLambertMaterial({map:oakLeafT}), p.length);
     p.forEach((q,i)=>{ const s=rnd(.8,1.4), ry=rnd(0,6.3);
-      setInst(trunk,i,q.x,1.5*s,q.z,s,s,s,ry);
-      setInst(branch,i,q.x+Math.cos(ry)*.7*s,2.6*s,q.z+Math.sin(ry)*.7*s,s,s,s,ry,.7);
-      setInst(cr1,i,q.x+rnd(-.5,.5)*s,4.1*s,q.z+rnd(-.5,.5)*s,s,s*rnd(.8,1),s,ry);
-      setInst(cr2,i,q.x+rnd(-1,1)*s,4.9*s,q.z+rnd(-1,1)*s,s,s,s,ry);
-      setInst(cr3,i,q.x+rnd(-1.2,1.2)*s,3.6*s,q.z+rnd(-1.2,1.2)*s,s,s*rnd(.8,1),s,ry); });
+      setInst(trunk,i,q.x,q.h+1.5*s,q.z,s,s,s,ry);
+      setInst(branch,i,q.x+Math.cos(ry)*.7*s,q.h+2.6*s,q.z+Math.sin(ry)*.7*s,s,s,s,ry,.7);
+      setInst(cr1,i,q.x+rnd(-.5,.5)*s,q.h+4.1*s,q.z+rnd(-.5,.5)*s,s,s*rnd(.8,1),s,ry);
+      setInst(cr2,i,q.x+rnd(-1,1)*s,q.h+4.9*s,q.z+rnd(-1,1)*s,s,s,s,ry);
+      setInst(cr3,i,q.x+rnd(-1.2,1.2)*s,q.h+3.6*s,q.z+rnd(-1.2,1.2)*s,s,s*rnd(.8,1),s,ry); });
     tint(cr1); tint(cr2); tint(cr3);
     forestGroup.add(trunk,branch,cr1,cr2,cr3);
   }
@@ -945,9 +1126,9 @@ function buildForest(){
     const cr2=new THREE.InstancedMesh(new THREE.SphereGeometry(1.0,7,5),
       new THREE.MeshLambertMaterial({map:birchLeafT}), p.length);
     p.forEach((q,i)=>{ const s=rnd(.8,1.35), ry=rnd(0,6.3), tilt=rnd(-.07,.07);
-      setInst(trunk,i,q.x,2.5*s,q.z,s,s,s,ry,tilt);
-      setInst(cr,i,q.x+tilt*4*s,5.3*s,q.z,s,s*rnd(.9,1.25),s,ry);
-      setInst(cr2,i,q.x+tilt*4*s+rnd(-.7,.7)*s,4.4*s,q.z+rnd(-.7,.7)*s,s,s,s,ry); });
+      setInst(trunk,i,q.x,q.h+2.5*s,q.z,s,s,s,ry,tilt);
+      setInst(cr,i,q.x+tilt*4*s,q.h+5.3*s,q.z,s,s*rnd(.9,1.25),s,ry);
+      setInst(cr2,i,q.x+tilt*4*s+rnd(-.7,.7)*s,q.h+4.4*s,q.z+rnd(-.7,.7)*s,s,s,s,ry); });
     tint(cr); tint(cr2);
     forestGroup.add(trunk,cr,cr2);
   }
@@ -961,9 +1142,9 @@ function buildForest(){
     const cr2=new THREE.InstancedMesh(new THREE.SphereGeometry(1.5,8,6),
       new THREE.MeshLambertMaterial({map:oakLeafT}), p.length);
     p.forEach((q,i)=>{ const s=rnd(.85,1.45), ry=rnd(0,6.3);
-      setInst(trunk,i,q.x,3.1*s,q.z,s,s,s,ry,rnd(-.04,.04));
-      setInst(cr,i,q.x+rnd(-.4,.4)*s,6.6*s,q.z+rnd(-.4,.4)*s,s,s*rnd(.85,1.1),s,ry);
-      setInst(cr2,i,q.x+rnd(-1,1)*s,5.4*s,q.z+rnd(-1,1)*s,s,s,s,ry); });
+      setInst(trunk,i,q.x,q.h+3.1*s,q.z,s,s,s,ry,rnd(-.04,.04));
+      setInst(cr,i,q.x+rnd(-.4,.4)*s,q.h+6.6*s,q.z+rnd(-.4,.4)*s,s,s*rnd(.85,1.1),s,ry);
+      setInst(cr2,i,q.x+rnd(-1,1)*s,q.h+5.4*s,q.z+rnd(-1,1)*s,s,s,s,ry); });
     tint(cr); tint(cr2);
     forestGroup.add(trunk,cr,cr2);
   }
@@ -973,7 +1154,8 @@ function buildForest(){
   const grass=new THREE.InstancedMesh(new THREE.ConeGeometry(.16,.34,4),
     new THREE.MeshLambertMaterial({color:0x55793c}), grassN);
   for(let i=0;i<grassN;i++){ const a=Math.random()*6.283, dd=Math.sqrt(Math.random())*WORLD_R;
-    setInst(grass,i,Math.cos(a)*dd,.14,Math.sin(a)*dd,
+    const gx=Math.cos(a)*dd, gz=Math.sin(a)*dd;
+    setInst(grass,i,gx,gH(gx,gz)+.14,gz,
       rnd(.6,1.4),rnd(.6,1.5),rnd(.6,1.4),rnd(0,6.3),rnd(-.2,.2)); }
   tint(grass);
   forestGroup.add(grass);
@@ -983,46 +1165,195 @@ function buildForest(){
   const bush=new THREE.InstancedMesh(new THREE.SphereGeometry(.7,7,5),
     new THREE.MeshLambertMaterial({color:0x294a22}), bushN);
   for(let i=0;i<bushN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
-    setInst(bush,i,Math.cos(a)*d,rnd(.15,.3),Math.sin(a)*d, rnd(.6,1.6),rnd(.4,.8),rnd(.6,1.6),rnd(0,6.3)); }
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d;
+    setInst(bush,i,gx,gH(gx,gz)+rnd(.15,.3),gz, rnd(.6,1.6),rnd(.4,.8),rnd(.6,1.6),rnd(0,6.3)); }
   const fernN = Math.round(120*DF);
   const fern=new THREE.InstancedMesh(new THREE.ConeGeometry(.5,.9,5),
     new THREE.MeshLambertMaterial({color:0x3f7034}), fernN);
   for(let i=0;i<fernN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
-    setInst(fern,i,Math.cos(a)*d,.4,Math.sin(a)*d, rnd(.7,1.3),rnd(.7,1.4),rnd(.7,1.3),rnd(0,6.3),rnd(-.15,.15)); }
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d;
+    setInst(fern,i,gx,gH(gx,gz)+.4,gz, rnd(.7,1.3),rnd(.7,1.4),rnd(.7,1.3),rnd(0,6.3),rnd(-.15,.15)); }
   const rockN=44;
   const rock=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.4,0),
     new THREE.MeshLambertMaterial({color:0x6a6a60}), rockN);
   for(let i=0;i<rockN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
-    setInst(rock,i,Math.cos(a)*d,rnd(.05,.2),Math.sin(a)*d, rnd(.5,1.8),rnd(.4,1),rnd(.5,1.8),rnd(0,6.3)); }
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d;
+    setInst(rock,i,gx,gH(gx,gz)+rnd(.05,.2),gz, rnd(.5,1.8),rnd(.4,1),rnd(.5,1.8),rnd(0,6.3)); }
   const logN=16;
   const log=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.26,3.2,6),
     new THREE.MeshLambertMaterial({map:barkDark}), logN);
   for(let i=0;i<logN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R*.9;
-    setInst(log,i,Math.cos(a)*d,.24,Math.sin(a)*d, 1,1,1, rnd(0,6.3), Math.PI/2); }
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d;
+    setInst(log,i,gx,gH(gx,gz)+.24,gz, 1,1,1, rnd(0,6.3), Math.PI/2); }
   forestGroup.add(bush,fern,rock,log);
 
-  /* --- potôčik: kľukatí sa naprieč lesom --- */
+  /* --- šišky, vetvičky, mladé stromčeky — podrast z fotiek --- */
+  const coneN=Math.round(70*DF);
+  const pinecone=new THREE.InstancedMesh(new THREE.ConeGeometry(.045,.14,6),
+    new THREE.MeshLambertMaterial({color:0x4a3320}), coneN);
+  for(let i=0;i<coneN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d;
+    setInst(pinecone,i,gx,gH(gx,gz)+.05,gz,1,1,1,rnd(0,6.3),rnd(1.2,1.9)); }
+  const twigN=Math.round(90*DF);
+  const twig=new THREE.InstancedMesh(new THREE.CylinderGeometry(.018,.025,1.1,4),
+    new THREE.MeshLambertMaterial({color:0x3e2e1c}), twigN);
+  for(let i=0;i<twigN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d;
+    setInst(twig,i,gx,gH(gx,gz)+.03,gz,rnd(.5,1.3),rnd(.5,1.3),rnd(.5,1.3),rnd(0,6.3),Math.PI/2); }
+  const sapN=Math.round(34*DF);
+  const sapT=new THREE.InstancedMesh(new THREE.CylinderGeometry(.02,.035,1.2,4),
+    new THREE.MeshLambertMaterial({color:0x5a4a34}), sapN);
+  const sapC=new THREE.InstancedMesh(new THREE.SphereGeometry(.5,6,5),
+    new THREE.MeshLambertMaterial({color:0x8fbf5e}), sapN);
+  for(let i=0;i<sapN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+    const gx=Math.cos(a)*d, gz=Math.sin(a)*d, h0=gH(gx,gz), s=rnd(.6,1.4);
+    setInst(sapT,i,gx,h0+.6*s,gz,s,s,s,rnd(0,6.3));
+    setInst(sapC,i,gx,h0+1.25*s,gz,s,s*rnd(.8,1.2),s,rnd(0,6.3)); }
+  tint(sapC);
+  forestGroup.add(pinecone,twig,sapT,sapC);
+
+  /* --- balvanisko: skupina veľkých skál --- */
+  { const ba=Math.random()*6.283, bd=rnd(18,WORLD_R*.8);
+    const bx=Math.cos(ba)*bd, bz=Math.sin(ba)*bd;
+    for(let i=0;i<6;i++){ const r=rnd(.6,1.6);
+      const big=new THREE.Mesh(new THREE.DodecahedronGeometry(r,0),
+        new THREE.MeshLambertMaterial({color:0x76766c}));
+      const ox=bx+rnd(-2.5,2.5), oz=bz+rnd(-2.5,2.5);
+      big.position.set(ox, gH(ox,oz)+r*.35, oz);
+      big.scale.y=rnd(.5,.8); big.rotation.y=rnd(0,6.3);
+      forestGroup.add(big);
+      treePts.push({x:ox,z:oz,r:r*.9}); } }
+
+  /* --- pne — domov podpňoviek --- */
+  const stumpPts=[];
+  { const stumpN=8;
+    const stump=new THREE.InstancedMesh(new THREE.CylinderGeometry(.30,.38,.55,8),
+      new THREE.MeshLambertMaterial({map:barkDark}), stumpN);
+    for(let i=0;i<stumpN;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*WORLD_R;
+      const gx=Math.cos(a)*d, gz=Math.sin(a)*d, h0=gH(gx,gz);
+      stumpPts.push({x:gx,z:gz});
+      setInst(stump,i,gx,h0+.27,gz,rnd(.8,1.4),1,rnd(.8,1.4),rnd(0,6.3)); }
+    forestGroup.add(stump); }
+
+  /* --- srnka: pasie sa, pred hubárom ujde --- */
+  deer=null;
+  if(Math.random()<.65){
+    const dg=new THREE.Group(), dm=new THREE.MeshLambertMaterial({color:0x8a6a48});
+    const body=new THREE.Mesh(new THREE.BoxGeometry(.85,.42,.34),dm); body.position.y=.72; dg.add(body);
+    const neck=new THREE.Mesh(new THREE.BoxGeometry(.16,.45,.16),dm);
+    neck.position.set(.42,1.05,0); neck.rotation.z=-.5; dg.add(neck);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(.30,.16,.15),dm);
+    head.position.set(.62,1.24,0); dg.add(head);
+    [[.32,.1],[.32,-.1],[-.32,.1],[-.32,-.1]].forEach(p=>{
+      const leg=new THREE.Mesh(new THREE.BoxGeometry(.07,.55,.07),dm);
+      leg.position.set(p[0],.27,p[1]); dg.add(leg); });
+    const rump=new THREE.Mesh(new THREE.BoxGeometry(.1,.3,.3),
+      new THREE.MeshLambertMaterial({color:0xf0ead8}));
+    rump.position.set(-.45,.74,0); dg.add(rump);
+    const a=Math.random()*6.283, d=rnd(15,WORLD_R*.7);
+    const dx=Math.cos(a)*d, dz=Math.sin(a)*d;
+    dg.position.set(dx, gH(dx,dz), dz); dg.rotation.y=rnd(0,6.3);
+    forestGroup.add(dg);
+    deer={g:dg, state:"graze", t:0};
+  }
+
+  /* --- diviak: konkurent — žerie huby --- */
+  boar=null;
+  if(Math.random()<.45){
+    const bg=new THREE.Group(), bm=new THREE.MeshLambertMaterial({color:0x42342a});
+    const body=new THREE.Mesh(new THREE.BoxGeometry(.95,.5,.42),bm); body.position.y=.5; bg.add(body);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(.42,.34,.3),bm);
+    head.position.set(.6,.46,0); bg.add(head);
+    const snout=new THREE.Mesh(new THREE.BoxGeometry(.14,.12,.14),
+      new THREE.MeshLambertMaterial({color:0x6a584a}));
+    snout.position.set(.84,.4,0); bg.add(snout);
+    [[.35,.12],[.35,-.12],[-.35,.12],[-.35,-.12]].forEach(p=>{
+      const leg=new THREE.Mesh(new THREE.BoxGeometry(.09,.4,.09),bm);
+      leg.position.set(p[0],.2,p[1]); bg.add(leg); });
+    const a=Math.random()*6.283, d=rnd(20,WORLD_R*.8);
+    const bx=Math.cos(a)*d, bz=Math.sin(a)*d;
+    bg.position.set(bx, gH(bx,bz), bz);
+    forestGroup.add(bg);
+    boar={g:bg, eaten:0, cool:0};
+    toast("🐗 Pozor — po lese sa motá diviak a žerie huby!");
+  }
+
+  /* --- svetelné lúče cez hmlu --- */
+  {
+    const rc=document.createElement("canvas"); rc.width=32; rc.height=256;
+    const rx=rc.getContext("2d");
+    const rg=rx.createLinearGradient(0,0,0,256);
+    rg.addColorStop(0,"rgba(255,248,220,.5)"); rg.addColorStop(.7,"rgba(255,248,220,.10)");
+    rg.addColorStop(1,"rgba(255,248,220,0)");
+    rx.fillStyle=rg; rx.fillRect(0,0,32,256);
+    const rTex=sRGBTex(rc);
+    const boost = weather.id==="fogw" ? 1.7 : 1;
+    const sdir=Math.atan2(sun.position.x,sun.position.z);
+    for(let i=0;i<6;i++){
+      const a=Math.random()*6.283, d=rnd(8,34);
+      const gx2=Math.cos(a)*d, gz2=Math.sin(a)*d;
+      const rp=new THREE.Mesh(new THREE.PlaneGeometry(rnd(.9,1.8),22),
+        new THREE.MeshBasicMaterial({map:rTex,transparent:true,opacity:rnd(.05,.10)*boost,
+          blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+      rp.position.set(gx2, gH(gx2,gz2)+10, gz2);
+      rp.rotation.y=sdir+rnd(-.3,.3); rp.rotation.z=.30+rnd(-.06,.06);
+      forestGroup.add(rp);
+    }
+  }
+
+  /* --- peľ / prach vo vzduchu --- */
+  {
+    const n=130, pp=new Float32Array(n*3);
+    for(let i=0;i<n;i++){ const a=Math.random()*6.283, d=Math.sqrt(Math.random())*34;
+      const gx2=Math.cos(a)*d, gz2=Math.sin(a)*d;
+      pp[i*3]=gx2; pp[i*3+1]=gH(gx2,gz2)+rnd(.4,6); pp[i*3+2]=gz2; }
+    const dg=new THREE.BufferGeometry();
+    dg.setAttribute("position",new THREE.BufferAttribute(pp,3));
+    dustPts=new THREE.Points(dg,new THREE.PointsMaterial({color:0xfff6dc,size:.05,
+      transparent:true,opacity:.5,depthWrite:false}));
+    forestGroup.add(dustPts);
+  }
+
+  /* --- potôčik: súvislá stuha kopírujúca terén --- */
   {
     const off=rnd(-25,25), amp=rnd(8,16), k=rnd(.05,.09), ph=rnd(0,6.3);
-    const segs=46, wMat=new THREE.MeshStandardMaterial({color:0x3f6f7e,roughness:.15,metalness:0,
-      transparent:true,opacity:.82});
-    for(let i=0;i<segs;i++){
-      const x0=-WORLD_R+ i/segs*2*WORLD_R, x1=-WORLD_R+ (i+1)/segs*2*WORLD_R;
-      const z0=off+Math.sin(x0*k+ph)*amp, z1=off+Math.sin(x1*k+ph)*amp;
-      const mx=(x0+x1)/2, mz=(z0+z1)/2;
-      if(Math.hypot(mx,mz)>WORLD_R) continue;
-      const len=Math.hypot(x1-x0,z1-z0)+.25;
-      const seg=new THREE.Mesh(new THREE.PlaneGeometry(len,1.7),wMat);
-      seg.rotation.x=-Math.PI/2;
-      seg.rotation.z=-Math.atan2(z1-z0,x1-x0);
-      seg.position.set(mx,.025,mz);
-      forestGroup.add(seg);
-      if(i%4===0){ // kamene na brehu
+    const N=120, pts=[];
+    for(let i=0;i<=N;i++){ const x=-WORLD_R+i/N*2*WORLD_R;
+      const z=off+Math.sin(x*k+ph)*amp;
+      if(Math.hypot(x,z)<=WORLD_R+3) pts.push({x,z}); }
+    if(pts.length>6){
+      const ribbon=(w,lift,uvRep)=>{
+        const pos=[],uv=[],idx=[];
+        for(let i=0;i<pts.length;i++){
+          const p=pts[i], q=pts[Math.min(i+1,pts.length-1)], p0=pts[Math.max(i-1,0)];
+          const dx=q.x-p0.x, dz=q.z-p0.z, L=Math.hypot(dx,dz)||1;
+          const nx=-dz/L, nz=dx/L;
+          const y=gH(p.x,p.z)+lift;
+          pos.push(p.x+nx*w,y,p.z+nz*w, p.x-nx*w,y,p.z-nz*w);
+          uv.push(i/pts.length*uvRep,0, i/pts.length*uvRep,1);
+          if(i<pts.length-1){ const a=i*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); } }
+        const g=new THREE.BufferGeometry();
+        g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+        g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));
+        g.setIndex(idx); g.computeVertexNormals();
+        return g; };
+      // mokrý tmavý breh pod vodou
+      const bank=new THREE.Mesh(ribbon(1.25,.025,8),
+        new THREE.MeshLambertMaterial({color:0x382c1c,side:THREE.DoubleSide}));
+      forestGroup.add(bank);
+      // voda — svetlá, priehľadná, tečie
+      streamMat=new THREE.MeshStandardMaterial({map:waterTex,color:0xaccdd4,
+        roughness:.08,metalness:0,transparent:true,opacity:.85,side:THREE.DoubleSide});
+      forestGroup.add(new THREE.Mesh(ribbon(.78,.06,16),streamMat));
+      // kamene na brehoch
+      for(let i=5;i<pts.length-5;i+=8){ const p=pts[i], q=pts[i+1];
+        const dx=q.x-p.x, dz=q.z-p.z, L=Math.hypot(dx,dz)||1;
+        const side=Math.random()<.5?1:-1;
+        const sx=p.x-dz/L*1.15*side, sz=p.z+dx/L*1.15*side;
         const st=new THREE.Mesh(new THREE.DodecahedronGeometry(rnd(.16,.34),0),
           new THREE.MeshLambertMaterial({color:0x7a7a70}));
-        st.position.set(mx+rnd(-.4,.4), .08, mz+(Math.random()<.5?1.15:-1.15));
-        st.scale.y=.6; forestGroup.add(st);
-      }
+        st.position.set(sx, gH(sx,sz)+.08, sz);
+        st.scale.y=.6; forestGroup.add(st); }
     }
   }
 
@@ -1054,12 +1385,32 @@ function buildForest(){
     const x=tr.x+Math.cos(a)*d, z=tr.z+Math.sin(a)*d;
     if(Math.hypot(x,z)>WORLD_R) continue;
     // trsy: kuriatka a líšky v skupinkách, hríby občas vo dvojici
-    const clusterN = (sp.id==="kuriatko"||sp.id==="liska_or") ? 1+Math.floor(Math.random()*3)
+    const clusterN = sp.id==="podpnovka" ? 5+Math.floor(Math.random()*4)
+      : (sp.id==="kuriatko"||sp.id==="liska_or") ? 1+Math.floor(Math.random()*3)
       : (sp.type==="top" && Math.random()<.3) ? 2 : 1;
     for(let k=0;k<clusterN && placed<cnt;k++){
       addShroom3D(sp, x+rnd(-.5,.5), z+rnd(-.5,.5)); placed++;
     }
   }
+  /* opeňky na pňoch */
+  const armSp=SPECIES.find(s=>s.id==="podpnovka");
+  if(armSp && (T.pool? T.pool.includes("podpnovka") : armSp.terr.includes(terrain)) && stumpPts.length){
+    for(let i=0;i<2;i++){ const st=stumpPts[Math.floor(Math.random()*stumpPts.length)];
+      const tn=5+Math.floor(Math.random()*4);
+      for(let k=0;k<tn;k++) addShroom3D(armSp, st.x+rnd(-.45,.45), st.z+rnd(-.45,.45)); } }
+
+  /* čarodejný kruh — vzácny prírodný úkaz */
+  if(Math.random()<.25){
+    const ed=pool.filter(s=>s.type==="edible"||s.type==="top");
+    if(ed.length){ const sp=ed[Math.floor(Math.random()*ed.length)];
+      const ca=Math.random()*6.283, cd=rnd(10,WORLD_R*.7);
+      const cx=Math.cos(ca)*cd, cz=Math.sin(ca)*cd, R=2.3;
+      for(let i=0;i<9;i++){ const a=i/9*6.283;
+        addShroom3D(sp, cx+Math.cos(a)*R+rnd(-.2,.2), cz+Math.sin(a)*R+rnd(-.2,.2)); }
+      fairyRing={x:cx,z:cz,seen:false,sp};
+    }
+  } else fairyRing=null;
+
   /* hľuzovky — len so psom, len pod dubmi */
   const truffleSp=SPECIES.find(s=>s.id==="hluzovka");
   const truffleHere = T.pool ? T.pool.includes("hluzovka") : truffleSp.terr.includes(terrain);
@@ -1070,9 +1421,23 @@ function buildForest(){
       const x=tr.x+Math.cos(a)*d, z=tr.z+Math.sin(a)*d;
       if(Math.hypot(x,z)<=WORLD_R) addShroom3D(truffleSp,x,z); }
   }
+  /* --- stratená peňaženka --- */
+  wallet=null;
+  if(Math.random()<.18){
+    const wa=Math.random()*6.283, wd=rnd(10,WORLD_R*.75);
+    const wx=Math.cos(wa)*wd, wz=Math.sin(wa)*wd;
+    const wg=new THREE.Mesh(new THREE.BoxGeometry(.16,.05,.11),
+      new THREE.MeshLambertMaterial({color:0x6a3a22}));
+    wg.position.set(wx, gH(wx,wz)+.04, wz); wg.rotation.y=rnd(0,6.3);
+    forestGroup.add(wg);
+    wallet={g:wg, x:wx, z:wz, amt:Math.round(rnd(15,38)), taken:false};
+  }
+
   scene.add(shroomGroup);
   addButterflies();
   scene.add(forestGroup);
+  ground.receiveShadow=true;
+  enableShadows(forestGroup); enableShadows(shroomGroup);
   updateLeft();
 
   /* objednávky z reštaurácií — nové pri každej výprave */
@@ -1105,7 +1470,7 @@ function makeCapMat(d){
     // jemné fľaky a oder
     for(let i=0;i<120;i++){ x.fillStyle=`rgba(${Math.random()<.5?'0,0,0':'255,240,210'},${rnd(.02,.07)})`;
       x.beginPath(); x.ellipse(Math.random()*256,Math.random()*128,rnd(2,9),rnd(1.5,5),rnd(0,3),0,7); x.fill(); }
-    capTexCache[key]=new THREE.CanvasTexture(c);
+    capTexCache[key]=sRGBTex(c);
   }
   const m=new THREE.MeshStandardMaterial({map:capTexCache[key],
     roughness: d.gloss? .26 : (d.net||d.speckles)? .45 : .78, metalness:0});
@@ -1129,7 +1494,7 @@ function makeUnderMat(d, gills){
       for(let i=0;i<650;i++){ x.beginPath();
         x.arc(Math.random()*128,Math.random()*128,rnd(.6,1.3),0,7); x.fill(); }
     }
-    underTexCache[key]=new THREE.CanvasTexture(c);
+    underTexCache[key]=sRGBTex(c);
   }
   return new THREE.MeshStandardMaterial({map:underTexCache[key],roughness:.95,metalness:0});
 }
@@ -1208,17 +1573,22 @@ function shroomMesh(sp, scale){
     /* hríbovité podľa fotky: mladé = guľatý klobúk na bachratom súdku,
        staré = rozložený plochší klobúk na vyššom hlúbiku */
     const stout=!!d.stemBulb;
+    const slim=!!d.slim;
     const mat01=Math.min(1,Math.max(0,(scale-0.9)/1.7));   // zrelosť 0..1
-    const thick=rnd(.95,1.5);                               // individuálna hrúbka
-    const stemH=((stout?.085:.105)+.055*mat01)*scale;
+    let thick=rnd(.95,1.5);                                 // individuálna hrúbka
+    if(slim) thick*= .38;                                   // opeňky: tenučké hlúbiky
+    const stemH=((stout?.085:(slim?.145:.105))+.055*mat01)*scale;
     const belly=(stout? (.020-.008*mat01) : .006)*scale*thick;
     const stem=new THREE.Mesh(
       stemGeo((stout?.037:.024)*scale*thick,(stout?.054:.032)*scale*thick,stemH,belly),
       getStemMat(d));
     g.add(stem);
-    const capR=(stout? .080+.038*mat01 : .070+.028*mat01)*scale;
+    const capR=((stout? .080+.038*mat01 : .070+.028*mat01)*(slim?.62:1))*scale;
     const capH=capR*(.95-.42*mat01);
     const pores=new THREE.Mesh(new THREE.CylinderGeometry(capR*.76,capR*.48,.011*scale,16),makeUnderMat(d,false));
+    const oldT=Math.max(0,(mat01-.45)/.55);   // staré kusy: rúrky žltnú až zelenajú
+    if(oldT>0 && !d.dots) pores.material.color.lerp(new THREE.Color(0x9aa64c), oldT*.75);
+    if(oldT>.3) capMat.color.multiplyScalar(.93); // klobúk matnie
     pores.position.y=stemH-.002*scale; g.add(pores);
     const cap=new THREE.Mesh(capGeo(capR,capH,1.25+1.3*mat01),capMat);
     cap.position.y=stemH+.004*scale;
@@ -1236,13 +1606,14 @@ function addShroom3D(sp, x, z){
   const prize = sp.type!=="rare" && sp.type!=="toxic" && sp.type!=="inedible" && Math.random()<.05;
   const scale=rnd(0.9,2.6)*(prize?1.35:1);   // od húžvičky po statný kus
   const g=shroomMesh(sp,scale);
-  g.position.set(x,0,z); g.rotation.y=rnd(0,6.3);
+  const hy=gH(x,z);
+  g.position.set(x,hy,z); g.rotation.y=rnd(0,6.3);
   g.rotation.z=rnd(-.07,.07); g.rotation.x=rnd(-.05,.05); // prirodzený náklon
   const hit=new THREE.Mesh(new THREE.SphereGeometry(.34,6,5),
     new THREE.MeshBasicMaterial({visible:false}));
   hit.position.y=.2; g.add(hit);
-  const rec={sp, prize, size:scale, picked:false, seenBonus:false, group:g, hit, pos:new THREE.Vector3(x,0,z),
-    detectR: sp.id==="hluzovka" ? 6.0 : 3.2};
+  const rec={sp, prize, size:scale, picked:false, seenBonus:false, group:g, hit, pos:new THREE.Vector3(x,hy,z),
+    detectR: sp.id==="hluzovka" ? 6.0 : (profile.up.lamp?4.4:3.2)};
   hit.userData.rec=rec;
   shrooms.push(rec); shroomGroup.add(g);
 }
@@ -1321,7 +1692,7 @@ document.getElementById("lupa").addEventListener("pointerdown",e=>{
 ===================================================== */
 let lastT=performance.now(), nearestRec=null, lupaAction=null;
 const lupaEl=document.getElementById("lupa");
-const OVERLAYS=["inspectOv","cleanOv","marketOv","menuOv","atlasOv","introOv","setOv","helpOv","nameOv"];
+const OVERLAYS=["inspectOv","cleanOv","marketOv","menuOv","atlasOv","introOv","setOv","helpOv","nameOv","cookOv","walletOv"];
 const anyModal=()=>OVERLAYS.some(id=>!document.getElementById(id).classList.contains("hidden"));
 const SIGN={x:3.2,z:4.5};
 function showLupaAt(wx,wy,wz,txt,act){
@@ -1350,7 +1721,7 @@ function animate(){
     const mlen=Math.hypot(mx,mz);
     if(mlen>0.08){
       mx/=Math.max(1,mlen); mz/=Math.max(1,mlen);
-      const sp=(profile.up.boots?4.4:3.0);
+      const sp=profile.up.babeta?5.8:(profile.up.boots?4.4:3.0);
       const sin=Math.sin(player.yaw), cos=Math.cos(player.yaw);
       // dopredu = smer pohľadu (joystick hore => mz<0)
       player.x += (mx*cos + mz*sin)*sp*dt;
@@ -1365,15 +1736,27 @@ function animate(){
     } else player.bob*=0.9;
   }
 
-  camera.position.set(player.x, 1.58 + Math.sin(player.bob)*0.035, player.z);
+  if(!document.getElementById("introOv").classList.contains("hidden"))
+    player.yaw += dt*.045;   // pomalá panoráma za menu
+  camera.position.set(player.x, gH(player.x,player.z) + 1.58 + Math.sin(player.bob)*0.035, player.z);
   camera.rotation.order="YXZ";
   camera.rotation.y=player.yaw; camera.rotation.x=player.pitch;
+  camera.rotation.z=Math.sin(player.bob*.5)*.010;
+  // tiene sledujú hráča
+  const sOff=sunDir;
+  sun.position.set(player.x+sOff[0], sOff[1], player.z+sOff[2]);
+  sun.target.position.set(player.x,0,player.z);
+  sun.target.updateMatrixWorld();
 
   // dym z komína
   if(homeSmoke.length){ const tnow=now*.001;
     homeSmoke.forEach(s=>{ const t=(tnow*.5+s.userData.ph)%3.2;
       s.position.y=4.4+t*.85; s.position.x=1.5+Math.sin(tnow+s.userData.ph)*.18+t*.22;
       s.material.opacity=.5*(1-t/3.2); }); }
+
+  // voda tečie + peľ sa vznáša
+  if(streamMat && streamMat.map) streamMat.map.offset.x=(now*.00006)%1;
+  if(dustPts){ dustPts.rotation.y+=dt*.012; dustPts.position.y=Math.sin(now*.0004)*.25; }
 
   // pop pri odrezaní huby
   for(let i=picksTw.length-1;i>=0;i--){ const tw=picksTw[i]; tw.t+=dt*3;
@@ -1385,9 +1768,60 @@ function animate(){
   if(butterflies.length){ const tb=now*.001;
     butterflies.forEach(b=>{ const t=tb*b.sp+b.ph;
       b.m.position.set(b.ax+Math.sin(t)*2.4+Math.sin(t*.7)*1.1,
-        1.0+Math.sin(t*1.7)*.45,
+        b.gy+1.0+Math.sin(t*1.7)*.45,
         b.az+Math.cos(t*.9)*2.4);
       b.m.rotation.y=t; b.m.scale.x=.4+Math.abs(Math.sin(t*9))*.8; }); }
+
+  // diviak — hľadá najbližšiu hubu a žerie
+  if(boar && !modal){
+    const pd=Math.hypot(boar.g.position.x-player.x, boar.g.position.z-player.z);
+    boar.cool-=dt;
+    if(pd<5){ // pred hubárom cúvne
+      const fa=Math.atan2(boar.g.position.x-player.x, boar.g.position.z-player.z);
+      boar.g.position.x+=Math.sin(fa)*3.5*dt; boar.g.position.z+=Math.cos(fa)*3.5*dt;
+      boar.g.rotation.y=fa;
+    } else if(boar.cool<=0){
+      let tgt=null, td=1e9;
+      for(const s of shrooms){ if(s.picked) continue;
+        const d=Math.hypot(s.pos.x-boar.g.position.x, s.pos.z-boar.g.position.z);
+        if(d<td){ td=d; tgt=s; } }
+      if(tgt){
+        const ba=Math.atan2(tgt.pos.x-boar.g.position.x, tgt.pos.z-boar.g.position.z);
+        boar.g.rotation.y=ba;
+        boar.g.position.x+=Math.sin(ba)*1.25*dt; boar.g.position.z+=Math.cos(ba)*1.25*dt;
+        if(td<.5){ tgt.picked=true; picksTw.push({g:tgt.group,t:0}); updateLeft();
+          boar.eaten++; boar.cool=2.5;
+          toast(`🐗 Diviak zožral hubu (${tgt.sp.name})!`,"bad");
+          if(boar.eaten>=4){ forestGroup.remove(boar.g); boar=null;
+            toast("🐗 Diviak sa napchal a odišiel do húštiny."); } }
+      }
+    }
+    if(boar) boar.g.position.y=gH(boar.g.position.x,boar.g.position.z);
+  }
+
+  // srnka
+  if(deer){
+    const dd=Math.hypot(deer.g.position.x-player.x, deer.g.position.z-player.z);
+    if(deer.state==="graze"){
+      deer.g.rotation.y+=Math.sin(now*.0007)*.002;
+      if(dd<8){ deer.state="flee"; deer.t=0;
+        const fa=Math.atan2(deer.g.position.x-player.x, deer.g.position.z-player.z);
+        deer.fa=fa; deer.g.rotation.y=fa;
+        toast("🦌 Srnka! Zbadala ťa a uteká."); }
+    } else {
+      deer.t+=dt;
+      deer.g.position.x+=Math.sin(deer.fa)*7.5*dt;
+      deer.g.position.z+=Math.cos(deer.fa)*7.5*dt;
+      deer.g.position.y=gH(deer.g.position.x,deer.g.position.z)+Math.abs(Math.sin(deer.t*9))*.25;
+      if(deer.t>3.2){ forestGroup.remove(deer.g); deer=null; }
+    }
+  }
+  // objav čarodejného kruhu
+  if(fairyRing && !fairyRing.seen){
+    if(Math.hypot(fairyRing.x-player.x, fairyRing.z-player.z)<5){
+      fairyRing.seen=true;
+      gainXP(15,`čarodejný kruh ${fairyRing.sp.name.toLowerCase()}! Vzácny úkaz`); }
+  }
 
   // kroky
   if(!modal){
@@ -1400,18 +1834,41 @@ function animate(){
   if(!modal){
     if(terrain==="doma"){
       const ds=Math.hypot(SIGN.x-player.x, SIGN.z-player.z);
-      if(ds<3.6) shown=showLupaAt(SIGN.x,1.8,SIGN.z,"🪧 Kam na huby?",openMenu);
+      const dk=Math.hypot(DOOR.x-player.x, DOOR.z-player.z);
+      if(dk<3.0 && dk<ds) shown=showLupaAt(DOOR.x,1.9,DOOR.z,"🍳 Variť z úlovku",openCook);
+      else if(ds<3.6) shown=showLupaAt(SIGN.x,1.8,SIGN.z,"🪧 Kam na huby?",openMenu);
     } else {
       nearestRec=null; let nd=1e9;
       for(const s of shrooms){ if(s.picked) continue;
         const d=Math.hypot(s.pos.x-player.x, s.pos.z-player.z);
         if(d<s.detectR && d<nd){ nd=d; nearestRec=s; } }
-      if(nearestRec){ const r=nearestRec;
+      let wd2=1e9;
+      if(wallet && !wallet.taken) wd2=Math.hypot(wallet.x-player.x, wallet.z-player.z);
+      if(wallet && !wallet.taken && wd2<3.0 && (!nearestRec || wd2<Math.hypot(nearestRec.pos.x-player.x,nearestRec.pos.z-player.z))){
+        shown=showLupaAt(wallet.x, gH(wallet.x,wallet.z)+.5, wallet.z, "👛 Zdvihnúť peňaženku",
+          ()=>{ $("walletAmt").textContent=eur(wallet.amt); $("walletOv").classList.remove("hidden"); });
+      } else if(nearestRec){ const r=nearestRec;
         const txt = r.sp.id==="hluzovka" ? "🐕 Bobík niečo zavetril!" : "🔍 Obzrieť hubu";
-        shown=showLupaAt(r.pos.x,0.55,r.pos.z,txt,()=>openInspect(r)); }
+        shown=showLupaAt(r.pos.x,r.pos.y+0.55,r.pos.z,txt,()=>openInspect(r)); }
     }
   }
   if(!shown) lupaEl.style.display="none";
+
+  // kompas k najbližšej hube (do 15 m)
+  const kEl=document.getElementById("kompas");
+  if(profile.up.compass && !modal && terrain!=="doma"){
+    let kr=null, kd=15;
+    for(const s of shrooms){ if(s.picked) continue;
+      const d=Math.hypot(s.pos.x-player.x, s.pos.z-player.z);
+      if(d<kd){ kd=d; kr=s; } }
+    if(kr && kd>3.0){
+      const bearing=Math.atan2(kr.pos.x-player.x, kr.pos.z-player.z);
+      let rel=bearing-(player.yaw+Math.PI); 
+      while(rel>Math.PI)rel-=6.283; while(rel<-Math.PI)rel+=6.283;
+      kEl.style.display="block";
+      kEl.style.transform=`translateX(-50%) rotate(${rel*57.3}deg)`;
+    } else kEl.style.display="none";
+  } else kEl.style.display="none";
 
   renderer.render(scene,camera);
 }
@@ -1638,6 +2095,12 @@ function finishClean(clean){
 }
 $("btnDoneClean").onclick=()=>finishClean(true);
 $("btnSkipClean").onclick=()=>finishClean(false);
+$("btnTrash").onclick=()=>{
+  const w=currentClean&&currentClean.wormy;
+  $("cleanOv").classList.add("hidden"); currentClean=null;
+  if(w) gainXP(2,"červivú si nechal lesu — správny hubár");
+  else toast("🚮 Hubu si nechal na pníku.");
+};
 
 const SHOP=[
  {id:"knife", name:"Hubársky nôž", price:25, desc:"Jedným ťuknutím očistíš celú hubu."},
@@ -1645,11 +2108,15 @@ const SHOP=[
  {id:"boots", name:"Gumáky Tatra", price:40, desc:"Po lese sa hýbeš o polovicu rýchlejšie."},
  {id:"basket1", name:"Prútený košík (12 miest)", price:18, desc:"Viac húb na jednu výpravu."},
  {id:"basket2", name:"Krošňa (18 miest)", price:60, desc:"Košík skúseného hubára."},
- {id:"dog", name:"Pes Bobík 🐕", price:150, desc:"Cvičený na hľuzovky — zavetrí ich pod dubmi."}
+ {id:"lamp", name:"Čelovka Petzl", price:35, desc:"Lepšie vidíš do podrastu — bublina huby naskočí z väčšej diaľky."},
+ {id:"compass", name:"Hubárska intuícia (kompas)", price:55, desc:"Šípka na obrazovke ťa vedie k najbližšej hube do 15 m."},
+ {id:"dryer", name:"Sušička húb Eta", price:120, desc:"Sušené huby sú drahšie — +10 % ku každému predaju."},
+ {id:"dog", name:"Pes Bobík 🐕", price:150, desc:"Cvičený na hľuzovky — zavetrí ich pod dubmi."},
+ {id:"babeta", name:"Moped Babeta 210", price:220, desc:"Legendárny stroj. Po lese sa presúvaš bleskovo."}
 ];
 function itemPrice(it){
   const sizeMul = .55 + Math.min(1,Math.max(0,((it.size||1.5)-0.9)/1.7));   // .55–1.55 podľa veľkosti
-  return it.sp.price*sizeMul*(it.clean?1:0.55)*(it.wormy?0.25:1)*(it.prize?2.5:1)*(weather?weather.price:1);
+  return it.sp.price*sizeMul*(it.clean?1:0.55)*(it.wormy?0.25:1)*(it.prize?2.5:1)*(profile.up.dryer?1.10:1)*(weather?weather.price:1);
 }
 
 /* ---------- odznaky ---------- */
@@ -1678,6 +2145,38 @@ function checkBadges(){
     toast(`🏅 Odznak: <b>${b.n}</b> (+${b.r} €)`,"gold"); } });
   if(got){ save(); refreshHUD(); }
 }
+
+/* ---------- kuchyňa ---------- */
+const RECIPES=[
+ {id:"prazenica", name:"Praženica s hubami", desc:"3 ľubovoľné huby z košíka", mult:1.6, xp:10,
+  take:(b)=>b.length>=3 ? b.slice(0,3) : null},
+ {id:"bedle", name:"Vyprážané bedle", desc:"2 bedle v trojobale", mult:2.0, xp:14,
+  take:(b)=>{ const m=b.filter(it=>it.sp.id==="bedla"); return m.length>=2 ? m.slice(0,2) : null; }},
+ {id:"gulas", name:"Hubový guláš", desc:"2 pravé hríby + 2 ďalšie huby", mult:1.9, xp:18,
+  take:(b)=>{ const t=b.filter(it=>it.sp.type==="top"), o=b.filter(it=>it.sp.type!=="top");
+    return (t.length>=2 && o.length>=2) ? [...t.slice(0,2),...o.slice(0,2)] : null; }}
+];
+function openCook(){
+  const L=$("cookList"); L.innerHTML="";
+  if(!basket.length) L.innerHTML='<div class="hintline" style="margin:10px 0">Košík je prázdny — najprv niečo nazbieraj.</div>';
+  const sorted=[...basket].sort((a,b)=>itemPrice(a)-itemPrice(b)); // varí sa z lacnejších
+  RECIPES.forEach(r=>{
+    const use=r.take(sorted);
+    const val=use? use.reduce((s,it)=>s+itemPrice(it),0)*r.mult : 0;
+    const row=document.createElement("div"); row.className="shoprow";
+    row.innerHTML=`<span>${r.name}<small>${r.desc}${use?` · gazdinky zaplatia <b>${eur(val)}</b>`:""}</small></span>`;
+    const b=document.createElement("button"); b.className="buy"; b.textContent="Uvariť";
+    b.disabled=!use;
+    b.onclick=()=>{ use.forEach(u=>{ const i=basket.indexOf(u); if(i>=0) basket.splice(i,1); });
+      profile.money+=val; profile.stats.earned+=val;
+      SFX.coin();
+      toast(`🍳 ${r.name} — gazdinky zaplatili <b>${eur(val)}</b>!`,"gold");
+      gainXP(r.xp,"domáca kuchyňa"); checkBadges(); save(); refreshHUD(); openCook(); };
+    row.appendChild(b); L.appendChild(row);
+  });
+  $("cookOv").classList.remove("hidden");
+}
+const DOOR={x:-1.2,z:-3.9};
 
 /* ---------- veľkozákazka ---------- */
 function ensureBig(){
@@ -1751,6 +2250,10 @@ function openMarket(){
     if(s.id==="atlas") owned=profile.up.atlas;
     if(s.id==="boots") owned=profile.up.boots;
     if(s.id==="dog") owned=profile.up.dog;
+    if(s.id==="lamp") owned=profile.up.lamp;
+    if(s.id==="compass") owned=profile.up.compass;
+    if(s.id==="dryer") owned=profile.up.dryer;
+    if(s.id==="babeta") owned=profile.up.babeta;
     if(s.id==="basket1") owned=profile.up.basket>=1;
     if(s.id==="basket2"){ owned=profile.up.basket>=2; blocked=profile.up.basket<1; }
     const row=document.createElement("div"); row.className="shoprow";
@@ -1764,6 +2267,10 @@ function openMarket(){
         if(s.id==="atlas")profile.up.atlas=true;
         if(s.id==="boots")profile.up.boots=true;
         if(s.id==="dog"){profile.up.dog=true; toast("🐕 Bobík je tvoj! V dubine a pralese zavetrí hľuzovky.","gold");}
+        if(s.id==="lamp")profile.up.lamp=true;
+        if(s.id==="compass")profile.up.compass=true;
+        if(s.id==="dryer")profile.up.dryer=true;
+        if(s.id==="babeta"){profile.up.babeta=true; toast("🛵 Babeta naštartovaná! Po lese lietaš.","gold");}
         if(s.id==="basket1")profile.up.basket=Math.max(profile.up.basket,1);
         if(s.id==="basket2")profile.up.basket=2;
         toast(`🛒 Kúpené: ${s.name}`,"gold"); save(); refreshHUD(); openMarket(); };
@@ -1866,17 +2373,75 @@ $("btnSet").onclick=()=>{
   $("chkInvert").checked=!!profile.settings.invert;
   $("chkDense").checked=!!profile.settings.dense;
   $("chkSound").checked=!!profile.settings.sound;
+  $("chkShadow").checked=profile.settings.shadows!==false;
   $("setOv").classList.remove("hidden");
 };
 $("btnHelp").onclick=()=>$("helpOv").classList.remove("hidden");
 $("chkInvert").onchange=e=>{ profile.settings.invert=e.target.checked; save(); };
 $("chkDense").onchange=e=>{ profile.settings.dense=e.target.checked; save(); };
 $("chkSound").onchange=e=>{ profile.settings.sound=e.target.checked; save(); };
+$("chkShadow").onchange=e=>{ profile.settings.shadows=e.target.checked;
+  renderer.shadowMap.enabled=e.target.checked; sun.castShadow=e.target.checked;
+  scene.traverse(o=>{ if(o.material) o.material.needsUpdate=true; });
+  save(); };
+
+$("btnWalletReturn").onclick=()=>{
+  if(wallet){ forestGroup.remove(wallet.g); wallet.taken=true; }
+  $("walletOv").classList.add("hidden");
+  gainXP(20,"vrátil si peňaženku — česť hubára");
+};
+$("btnWalletKeep").onclick=()=>{
+  if(wallet){ profile.money+=wallet.amt; forestGroup.remove(wallet.g); wallet.taken=true;
+    toast(`👛 +${eur(wallet.amt)}… svedomie si nechal v lese.`); }
+  $("walletOv").classList.add("hidden");
+  save(); refreshHUD();
+};
+
+/* ---------- onboarding ---------- */
+function drawIntroArt(){
+  const c=$("introArt"), x=c.getContext("2d");
+  const bg=x.createLinearGradient(0,0,0,120);
+  bg.addColorStop(0,"#e9dfc4"); bg.addColorStop(1,"#d8caa5");
+  x.fillStyle=bg; x.fillRect(0,0,360,120);
+  x.strokeStyle="rgba(63,98,52,.55)"; x.lineWidth=1.4;
+  for(let i=0;i<70;i++){ const px=Math.random()*360, h=rnd(5,14);
+    x.beginPath(); x.moveTo(px,112); x.quadraticCurveTo(px+rnd(-3,3),112-h/2,px+rnd(-5,5),112-h); x.stroke(); }
+  // prútený košík
+  x.save(); x.translate(285,84);
+  x.fillStyle="#8a5e32"; x.beginPath();
+  x.moveTo(-34,-16); x.quadraticCurveTo(-30,18,0,18); x.quadraticCurveTo(30,18,34,-16); x.closePath(); x.fill();
+  x.strokeStyle="rgba(50,32,14,.5)"; x.lineWidth=2;
+  for(let i=0;i<4;i++){ x.beginPath(); x.moveTo(-33+i*2,-12+i*8); x.quadraticCurveTo(0,-6+i*8,33-i*2,-12+i*8); x.stroke(); }
+  x.lineWidth=4; x.strokeStyle="#6e4a26";
+  x.beginPath(); x.ellipse(0,-16,32,20,0,Math.PI,0); x.stroke();
+  x.restore();
+  const sp=id=>SPECIES.find(s=>s.id===id).draw;
+  drawMushroom2D(x,272,78,1.1,sp("hrib_smrekovy"));
+  drawMushroom2D(x,300,76,0.9,sp("kuriatko"));
+  drawMushroom2D(x,70,110,2.1,sp("hrib_smrekovy"));
+  drawMushroom2D(x,130,112,1.6,sp("kuriatko"));
+  drawMushroom2D(x,185,110,1.8,sp("mucho_cervena"));
+  drawMushroom2D(x,228,112,1.3,sp("bedla"));
+}
+$("btnIntroNext").onclick=()=>{ $("introStep1").classList.add("hidden");
+  $("introStep2").classList.remove("hidden"); };
+$("btnIntroOk").onclick=()=>{ $("introStep2").classList.add("hidden");
+  $("introStep3").classList.remove("hidden"); };
 
 /* =====================================================
    ŠTART
 ===================================================== */
-(async()=>{ await load(); spawn(); buildForest(); refreshHUD(); animate(); })();
+(async()=>{ await load();
+  renderer.shadowMap.enabled = profile.settings.shadows!==false;
+  sun.castShadow = profile.settings.shadows!==false;
+  spawn(); buildForest(); refreshHUD();
+  drawIntroArt();
+  // vracajúci sa hráč nemusí čítať úvod znova
+  if(profile.xp>0 || profile.stats.found>0){
+    $("introStep1").classList.add("hidden");
+    $("introStep3").classList.remove("hidden");
+  }
+  animate(); })();
 </script>
 </body>
 </html>
