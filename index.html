@@ -649,9 +649,9 @@ function gH(x,z){ if(!HAMP) return 0;
         + Math.cos(x*.013-z*.017)*.6
         + Math.sin(x*.016+.5)*Math.cos(z*.014+1.8)*2.6   // veľké vlny — kopec hore, kopec dole
         + Math.sin(x*.008-1.1)*Math.cos(z*.009+.4)*1.8)*HAMP;
-  if(STREAM_P){ // potok si vyhĺbil plytké údolie
+  if(STREAM_P){ // potok si vyhĺbil koryto — hlbšie a širšie, aby terén nerezal hladinu
     const d=z-(STREAM_P.off+Math.sin(x*STREAM_P.k+STREAM_P.ph)*STREAM_P.amp);
-    h-=1.1*Math.exp(-d*d/16); }
+    h-=1.55*Math.exp(-d*d/26); }
   return h; }
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.08, 220);
@@ -700,6 +700,64 @@ function blip(freq,dur,type,vol,slide){
     o.start(t); o.stop(t+dur);
   }catch(e){}
 }
+let _noiseBuf=null;
+function noiseBuf(){ if(_noiseBuf||!AC) return _noiseBuf;
+  const b=AC.createBuffer(1,AC.sampleRate*1.5,AC.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  return _noiseBuf=b; }
+/* čľupnutie vo vode — vrstvený šum: mäkký žblnk + slosh + jemné dostrieknutie */
+function waterStep(){
+  if(!AC||!(profile.settings&&profile.settings.sound)) return;
+  try{
+    const t=AC.currentTime;
+    const layer=(type,f0,f1,q,vol,dur,delay)=>{
+      const src=AC.createBufferSource(); src.buffer=noiseBuf();
+      src.playbackRate.value=rnd(.8,1.2);
+      const fl=AC.createBiquadFilter(); fl.type=type; fl.Q.value=q;
+      fl.frequency.setValueAtTime(f0,t+delay);
+      if(f1!==f0) fl.frequency.exponentialRampToValueAtTime(f1,t+delay+dur*.7);
+      const g=AC.createGain();
+      g.gain.setValueAtTime(.0001,t+delay);
+      g.gain.linearRampToValueAtTime(vol,t+delay+.035);      // mäkký nábeh, žiadne cvaknutie
+      g.gain.exponentialRampToValueAtTime(.0008,t+delay+dur);
+      src.connect(fl); fl.connect(g); g.connect(AC.destination);
+      src.start(t+delay,Math.random()); src.stop(t+delay+dur+.05); };
+    const v=rnd(.8,1.15);                                     // každý krok inak silný
+    layer("lowpass", rnd(550,750), 280, .7, .045*v, rnd(.18,.24), 0);          // hlboký žblnk
+    layer("bandpass", rnd(950,1250), rnd(420,520), 1.0, .035*v, rnd(.22,.30), .015); // telo vody
+    if(Math.random()<.55)                                     // občas jemné dostrieknutie
+      layer("highpass", 2600, 2600, .7, .010*v, rnd(.06,.10), rnd(.06,.14));
+  }catch(e){}
+}
+/* zurkot potoka — beží stále, hlasitosť podľa vzdialenosti od vody */
+let brook=null;
+function ensureBrook(){
+  if(brook||!AC) return;
+  try{
+    const src=AC.createBufferSource(); src.buffer=noiseBuf(); src.loop=true;
+    const lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=900;
+    const bp=AC.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=.8; bp.frequency.value=600;
+    const g=AC.createGain(); g.gain.value=0;
+    // LFO mierne kýve filtrom — voda „žblnká“, nie je to monotónny šum
+    const lfo=AC.createOscillator(), lg=AC.createGain();
+    lfo.frequency.value=.6; lg.gain.value=220;
+    lfo.connect(lg); lg.connect(bp.frequency); lfo.start();
+    src.connect(lp); lp.connect(bp); bp.connect(g); g.connect(AC.destination);
+    src.start();
+    brook={g};
+  }catch(e){}
+}
+function streamDist(){
+  if(!STREAM_P||terrain==="doma") return 999;
+  return Math.abs(player.z-(STREAM_P.off+Math.sin(player.x*STREAM_P.k+STREAM_P.ph)*STREAM_P.amp));
+}
+function updateBrook(){
+  if(!AC) return; ensureBrook(); if(!brook) return;
+  const on=profile.settings&&profile.settings.sound;
+  const d=streamDist();
+  const vol=(on&&d<7)?(1-d/7)*(1-d/7)*.028:0;
+  brook.g.gain.setTargetAtTime(vol,AC.currentTime,.4);
+}
 const SFX={
   snip(){ blip(540,.10,"triangle",.20,-260); setTimeout(()=>blip(320,.08,"triangle",.12,-120),60); },
   coin(){ // cinkanie mincí — kaskáda
@@ -709,8 +767,14 @@ const SFX={
   },
   bad(){ blip(170,.30,"sawtooth",.16,-70); },
   level(){ [660,880,1100].forEach((f,i)=>setTimeout(()=>blip(f,.16,"triangle",.16),i*110)); },
-  step(){ blip(85,.05,"triangle",.05,-20); }
+  step(){ blip(85,.05,"triangle",.05,-20); },
+  splash(){ waterStep(); }
 };
+function inWater(){
+  if(!STREAM_P || terrain==="doma") return false;
+  const d=player.z-(STREAM_P.off+Math.sin(player.x*STREAM_P.k+STREAM_P.ph)*STREAM_P.amp);
+  return Math.abs(d)<1.0;
+}
 let stepT=0;
 
 /* ---------- textúry kreslené na canvas ---------- */
@@ -1108,7 +1172,7 @@ function qEvent(ev,data){
     chg=true;
     if(q.have>=q.need && !q.done){
       q.done=true; profile.money+=q.eur; profile.stats.earned+=q.eur;
-      gainXP(q.xp,`výzva splnená`); toast(`🏅 <b>Výzva splnená!</b> ${q.txt} · +${eur(q.eur)}`,"gold"); save();
+      gainXP(q.xp*(profile.up.termoska?2:1),`výzva splnená`); toast(`🏅 <b>Výzva splnená!</b> ${q.txt} · +${eur(q.eur)}`,"gold"); save();
     }
   }
   if(chg) renderQuests();
@@ -1200,10 +1264,11 @@ function buildForest(){
 
   // zem — zvlnený terén ako na fotkách
   HAMP = terrain==="doma" ? 0 : 1;
+  window._hens=[];
   STREAM_P = terrain==="doma" ? null
     : {off:rnd(-25,25), amp:rnd(8,16), k:rnd(.05,.09), ph:rnd(0,6.3)};
   {
-    const gg=new THREE.PlaneGeometry((WORLD_R+40)*2,(WORLD_R+40)*2,104,104);
+    const gg=new THREE.PlaneGeometry((WORLD_R+40)*2,(WORLD_R+40)*2,176,176);
     gg.rotateX(-Math.PI/2);
     const gp=gg.attributes.position;
     for(let i=0;i<gp.count;i++) gp.setY(i, gH(gp.getX(i),gp.getZ(i)));
@@ -1402,6 +1467,138 @@ function buildForest(){
     for(let i=0;i<3;i++){ const wd=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,1.0,6),
       new THREE.MeshLambertMaterial({map:barkDark}));
       wd.rotation.z=Math.PI/2; wd.position.set(3.4,.13+(i>1?.24:0),-4.4+(i%2)*.3); forestGroup.add(wd); }
+    // studňa — kamenný kruh, strieška, vedro
+    { const well=new THREE.Group();
+      const stoneM=new THREE.MeshLambertMaterial({color:0x8d8678});
+      const ring=new THREE.Mesh(new THREE.CylinderGeometry(.62,.68,.75,12),stoneM);
+      ring.position.y=.37; well.add(ring);
+      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.05,12),
+        new THREE.MeshLambertMaterial({color:0x12222a})); inner.position.y=.73; well.add(inner);
+      const wpM=new THREE.MeshLambertMaterial({color:0x5a4128});
+      [[-.66],[.66]].forEach(px=>{ const p=new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,1.5,6),wpM);
+        p.position.set(px[0],1.1,0); well.add(p); });
+      const axle=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.4,6),wpM);
+      axle.rotation.z=Math.PI/2; axle.position.y=1.55; well.add(axle);
+      const wr1=new THREE.Mesh(new THREE.BoxGeometry(1.7,.08,.85),
+        new THREE.MeshLambertMaterial({color:0x6e4a26}));
+      wr1.position.set(0,2.0,-.30); wr1.rotation.x=.55; well.add(wr1);
+      const wr2=wr1.clone(); wr2.position.z=.30; wr2.rotation.x=-.55; well.add(wr2);
+      const rope=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.55,4),
+        new THREE.MeshLambertMaterial({color:0xc9b89a}));
+      rope.position.y=1.28; well.add(rope);
+      const bucket=new THREE.Mesh(new THREE.CylinderGeometry(.14,.11,.20,9,1,true),
+        new THREE.MeshLambertMaterial({color:0x7a6a52,side:THREE.DoubleSide}));
+      bucket.position.y=.95; well.add(bucket);
+      well.position.set(-6,0,-3); forestGroup.add(well);
+      treePts.push({x:-6,z:-3,r:.95}); }
+    // jabloň — guľatá koruna s červenými jablkami
+    { const ap=new THREE.Group();
+      const tr=new THREE.Mesh(new THREE.CylinderGeometry(.14,.22,1.7,7),
+        new THREE.MeshLambertMaterial({map:barkDark}));
+      tr.position.y=.85; ap.add(tr);
+      const folM=new THREE.MeshLambertMaterial({color:0x4e7a34});
+      [[0,2.4,0,1.25],[ -.7,2.0,.3,.8],[ .65,2.1,-.25,.85],[ .1,2.0,.7,.7]].forEach(b=>{
+        const bl=new THREE.Mesh(lumpy(new THREE.SphereGeometry(b[3],10,8),.12,.2),folM);
+        bl.position.set(b[0],b[1],b[2]); ap.add(bl); });
+      const apM=new THREE.MeshLambertMaterial({color:0xc83c2e});
+      for(let i=0;i<10;i++){ const a=Math.random()*6.283, r2=rnd(.5,1.15), hy=rnd(1.7,2.9);
+        const apl=new THREE.Mesh(new THREE.SphereGeometry(.07,6,5),apM);
+        apl.position.set(Math.cos(a)*r2,hy,Math.sin(a)*r2); ap.add(apl); }
+      // dve spadnuté jablká v tráve
+      [[.8,.05,.6],[-.6,.05,.9]].forEach(p=>{ const apl=new THREE.Mesh(new THREE.SphereGeometry(.07,6,5),apM);
+        apl.position.set(p[0],p[1],p[2]); ap.add(apl); });
+      ap.position.set(-7.5,0,1.5); forestGroup.add(ap);
+      treePts.push({x:-7.5,z:1.5,r:.5}); }
+    // kvety po dvore — margarétky, maky, zvončeky
+    { const flN=Math.round(85*DF);
+      const stems=new THREE.InstancedMesh(new THREE.CylinderGeometry(.012,.016,.30,4),
+        new THREE.MeshLambertMaterial({color:0x4a6e2c}),flN);
+      const heads=new THREE.InstancedMesh(new THREE.SphereGeometry(.05,6,5),
+        new THREE.MeshLambertMaterial({color:0xffffff}),flN);
+      const palette=[0xe8e4d8,0xd84838,0xe8c84a,0x7a6ec8,0xd86aa0,0xe88a3a];
+      const col=new THREE.Color();
+      for(let i=0;i<flN;i++){ const a=Math.random()*6.283, dd=2.5+Math.sqrt(Math.random())*7.5;
+        const x=Math.cos(a)*dd, z=Math.sin(a)*dd-2, s=rnd(.7,1.3);
+        setInst(stems,i,x,.15*s,z,1,s,1,0);
+        setInst(heads,i,x,.31*s,z,s,s*.7,s,0);
+        heads.setColorAt(i,col.setHex(palette[Math.floor(Math.random()*palette.length)])); }
+      heads.instanceColor && (heads.instanceColor.needsUpdate=true);
+      forestGroup.add(stems,heads); }
+    // zeleninová záhradka — dva vyvýšené záhony s riadkami
+    { const gard=new THREE.Group();
+      const frameM=new THREE.MeshLambertMaterial({color:0x6e4a26});
+      const soilM=new THREE.MeshLambertMaterial({color:0x3a2a18});
+      const leafM=new THREE.MeshLambertMaterial({color:0x5a8e3a});
+      const leafM2=new THREE.MeshLambertMaterial({color:0x86a83e});
+      [[-1.1],[1.1]].forEach((bz,bi)=>{
+        const fr=new THREE.Mesh(new THREE.BoxGeometry(2.6,.28,1.5),frameM);
+        fr.position.set(0,.14,bz[0]); gard.add(fr);
+        const soil=new THREE.Mesh(new THREE.BoxGeometry(2.4,.06,1.3),soilM);
+        soil.position.set(0,.29,bz[0]); gard.add(soil);
+        for(let r=0;r<3;r++) for(let cN=0;cN<6;cN++){
+          const pl=new THREE.Mesh(lumpy(new THREE.SphereGeometry(rnd(.07,.11),6,5),.18,.25),
+            bi?leafM:leafM2);
+          pl.scale.y=.7;
+          pl.position.set(-1.0+cN*.4+rnd(-.04,.04),.34,bz[0]-.42+r*.42+rnd(-.04,.04));
+          gard.add(pl); } });
+      gard.position.set(6.5,0,-5.5); gard.rotation.y=.4; forestGroup.add(gard);
+      treePts.push({x:6.5,z:-5.5,r:1.6}); }
+    // lavička pri chodníku
+    { const bench=new THREE.Group();
+      const seatM=new THREE.MeshLambertMaterial({color:0x8a6034});
+      const legM=new THREE.MeshLambertMaterial({color:0x4a3520});
+      const seat=new THREE.Mesh(new THREE.BoxGeometry(1.5,.07,.42),seatM);
+      seat.position.y=.46; bench.add(seat);
+      const back=new THREE.Mesh(new THREE.BoxGeometry(1.5,.36,.06),seatM);
+      back.position.set(0,.78,-.20); back.rotation.x=-.16; bench.add(back);
+      [[-.62],[.62]].forEach(px=>{ const lg=new THREE.Mesh(new THREE.BoxGeometry(.08,.46,.36),legM);
+        lg.position.set(px[0],.23,0); bench.add(lg); });
+      bench.position.set(-3.3,0,1.1); bench.rotation.y=1.25; forestGroup.add(bench);
+      treePts.push({x:-3.3,z:1.1,r:.7}); }
+    // vtáčia búdka na kole
+    { const bh=new THREE.Group();
+      const pole2=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.9,6),
+        new THREE.MeshLambertMaterial({color:0x5a4128}));
+      pole2.position.y=.95; bh.add(pole2);
+      const house=new THREE.Mesh(new THREE.BoxGeometry(.34,.36,.30),
+        new THREE.MeshLambertMaterial({color:0xc8893a}));
+      house.position.y=2.05; bh.add(house);
+      const broof=new THREE.Mesh(new THREE.ConeGeometry(.30,.22,4),
+        new THREE.MeshLambertMaterial({color:0x7a3a26}));
+      broof.position.y=2.32; broof.rotation.y=Math.PI/4; bh.add(broof);
+      const hole=new THREE.Mesh(new THREE.CircleGeometry(.05,8),
+        new THREE.MeshBasicMaterial({color:0x140c06}));
+      hole.position.set(0,2.08,.151); bh.add(hole);
+      bh.position.set(7.4,0,1.8); forestGroup.add(bh);
+      treePts.push({x:7.4,z:1.8,r:.3}); }
+    // sliepky — ďobú do zeme
+    window._hens=[];
+    { const henB=new THREE.MeshLambertMaterial({color:0xb8773a});
+      const henW=new THREE.MeshLambertMaterial({color:0xe8e0d0});
+      [[2.4,-3.2,henB],[3.1,-2.6,henW],[1.8,-2.4,henB]].forEach((hp,hi)=>{
+        const hen=new THREE.Group();
+        const body=new THREE.Mesh(new THREE.SphereGeometry(.17,8,6),hp[2]);
+        body.scale.set(1.15,.95,.85); body.position.y=.20; hen.add(body);
+        const tail=new THREE.Mesh(new THREE.ConeGeometry(.09,.20,5),hp[2]);
+        tail.rotation.z=-.9; tail.position.set(-.18,.30,0); hen.add(tail);
+        const head=new THREE.Group();
+        const hd=new THREE.Mesh(new THREE.SphereGeometry(.075,7,6),hp[2]);
+        head.add(hd);
+        const comb=new THREE.Mesh(new THREE.BoxGeometry(.03,.06,.07),
+          new THREE.MeshLambertMaterial({color:0xc83028}));
+        comb.position.y=.085; head.add(comb);
+        const beak=new THREE.Mesh(new THREE.ConeGeometry(.025,.07,5),
+          new THREE.MeshLambertMaterial({color:0xe0a030}));
+        beak.rotation.z=-Math.PI/2; beak.position.set(.09,0,0); head.add(beak);
+        head.position.set(.17,.40,0); hen.add(head);
+        [[-.05,.06],[ .05,-.06]].forEach(lp2=>{ const leg=new THREE.Mesh(
+          new THREE.CylinderGeometry(.012,.012,.12,4),
+          new THREE.MeshLambertMaterial({color:0xd09030}));
+          leg.position.set(lp2[0],.06,lp2[1]); hen.add(leg); });
+        hen.position.set(hp[0],0,hp[1]); hen.rotation.y=rnd(0,6.3);
+        forestGroup.add(hen);
+        window._hens.push({grp:hen,head,ph:hi*2.1});
+        treePts.push({x:hp[0],z:hp[1],r:.3}); }); }
     // plot okolo dvora — koly + dve vodorovné žrde
     const postN=26, fenceM=new THREE.MeshLambertMaterial({map:barkDark});
     const posts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.05,.06,1.0,6),fenceM,postN);
@@ -1783,25 +1980,25 @@ function buildForest(){
        oči, uši, biele kly, kopýtka, chvost so strapcom */
     const bg=new THREE.Group();
     const brC=document.createElement("canvas"); brC.width=brC.height=64;
-    { const fx=brC.getContext("2d"); fx.fillStyle="#5e3c22"; fx.fillRect(0,0,64,64);
-      for(let i=0;i<420;i++){ fx.strokeStyle=`rgba(${Math.random()<.5?'40,24,12':'120,84,50'},${rnd(.15,.4)})`;
+    { const fx=brC.getContext("2d"); fx.fillStyle="#231a13"; fx.fillRect(0,0,64,64);
+      for(let i=0;i<420;i++){ fx.strokeStyle=`rgba(${Math.random()<.5?'10,7,4':'68,52,36'},${rnd(.2,.45)})`;
         fx.lineWidth=.9; const px=Math.random()*64, py=Math.random()*64;
         fx.beginPath(); fx.moveTo(px,py); fx.lineTo(px+rnd(-1.2,1.2),py+4); fx.stroke(); } }
     const bm=new THREE.MeshLambertMaterial({map:sRGBTex(brC)});
-    const headM=new THREE.MeshLambertMaterial({color:0x6e4626});
+    const headM=new THREE.MeshLambertMaterial({color:0x2c2016});
     // veľké oblé telo, vzadu vyššie — ako na obrázku
     const bod=new THREE.Mesh(new THREE.SphereGeometry(.36,14,10),bm);
     bod.scale.set(1.35,.92,.84); bod.position.set(-.12,.52,0); bg.add(bod);
     // zúbkovaný hrebeň srsti na pleciach
     for(let i=0;i<4;i++){ const br=new THREE.Mesh(new THREE.ConeGeometry(.05,.10,4),
-        new THREE.MeshLambertMaterial({color:0x4a2e18}));
+        new THREE.MeshLambertMaterial({color:0x120d08}));
       br.position.set(.22-i*.13,.86-i*.012,0); br.rotation.z=-.3; bg.add(br); }
     // hlava — veľká okrúhla, mierne dole, jasne vpredu
     const head=new THREE.Mesh(new THREE.SphereGeometry(.21,12,9),headM);
     head.scale.set(1.1,1.0,.85); head.position.set(.46,.55,0); bg.add(head);
     // plochý rypák smerom dopredu s nozdrami
     const snout=new THREE.Mesh(new THREE.CylinderGeometry(.085,.10,.12,10),
-      new THREE.MeshLambertMaterial({color:0xb07a62}));
+      new THREE.MeshLambertMaterial({color:0x7a5a48}));
     snout.rotation.z=Math.PI/2; snout.position.set(.70,.48,0); bg.add(snout);
     const nostM=new THREE.MeshLambertMaterial({color:0x3a201a});
     [[.045],[-.045]].forEach(pz=>{ const no=new THREE.Mesh(new THREE.SphereGeometry(.018,6,5),nostM);
@@ -1897,7 +2094,7 @@ function buildForest(){
   /* --- potôčik: súvislá stuha kopírujúca terén --- */
   {
     const {off,amp,k,ph}=STREAM_P||{off:0,amp:10,k:.06,ph:0};
-    const EXT=WORLD_R+34, N=170, pts=[];   // potok pokračuje ďaleko do hmly
+    const EXT=WORLD_R+34, N=300, pts=[];   // potok pokračuje ďaleko do hmly
     for(let i=0;i<=N;i++){ const x=-EXT+i/N*2*EXT;
       const z=off+Math.sin(x*k+ph)*amp;
       if(Math.hypot(x,z)<=EXT) pts.push({x,z}); }
@@ -1921,13 +2118,78 @@ function buildForest(){
         g.setIndex(idx); g.computeVertexNormals();
         return g; };
       // mokrý tmavý breh pod vodou
-      const bank=new THREE.Mesh(ribbon(1.25,.025,8),
-        new THREE.MeshLambertMaterial({color:0x382c1c,side:THREE.DoubleSide}));
+      const bank=new THREE.Mesh(ribbon(1.35,.035,8),
+        new THREE.MeshLambertMaterial({color:0x342a1a,side:THREE.DoubleSide}));
       forestGroup.add(bank);
-      // voda — svetlá, priehľadná, tečie
-      streamMat=new THREE.MeshStandardMaterial({map:waterTex,color:0xaccdd4,
-        roughness:.08,metalness:0,transparent:true,opacity:.85,side:THREE.DoubleSide});
-      forestGroup.add(new THREE.Mesh(ribbon(.78,.06,16),streamMat));
+      // voda — realistický shader: vlnky, odlesk slnka, hĺbková farba, pena pri brehoch
+      streamMat=new THREE.ShaderMaterial({
+        transparent:true, depthWrite:false, side:THREE.DoubleSide,
+        uniforms:{
+          uTime:{value:0},
+          uSun:{value:new THREE.Vector3(.45,.78,.32).normalize()},
+          uDeep:{value:new THREE.Color(0x18343c)},
+          uShallow:{value:new THREE.Color(0x5d9c8e)},
+          uSky:{value:new THREE.Color(0xcfe6ea)}
+        },
+        vertexShader:`
+          varying vec2 vUv; varying vec3 vWorld;
+          void main(){
+            vUv=uv;
+            vec4 wp=modelMatrix*vec4(position,1.0);
+            vWorld=wp.xyz;
+            gl_Position=projectionMatrix*viewMatrix*wp;
+          }`,
+        fragmentShader:`
+          precision highp float;
+          varying vec2 vUv; varying vec3 vWorld;
+          uniform float uTime; uniform vec3 uSun;
+          uniform vec3 uDeep, uShallow, uSky;
+          float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+          float noise(vec2 p){
+            vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+            return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+                       mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
+          void main(){
+            float t=uTime;
+            // pozdĺžna súradnica tečie, priečna 0..1
+            vec2 fu=vec2(vUv.x*46.0 - t*1.35, vUv.y*3.2);
+            // normála hladiny zo súčtu vlniek + šum
+            float h1=sin(fu.x*2.3+fu.y*1.7+t*1.8)*.5
+                    +sin(fu.x*4.7-fu.y*2.9+t*2.6)*.28
+                    +(noise(fu*2.4+vec2(-t*1.2,t*.3))-.5)*.9;
+            float h2=cos(fu.x*2.0-fu.y*2.2+t*2.1)*.5
+                    +cos(fu.x*5.3+fu.y*1.4-t*1.6)*.26
+                    +(noise(fu*2.1+vec2(t*.4,-t*.9))-.5)*.9;
+            vec3 n=normalize(vec3(h1*.34,1.0,h2*.34));
+            vec3 view=normalize(cameraPosition-vWorld);
+            // hĺbka: stred tmavý, kraje plytké
+            float across=abs(vUv.y-.5)*2.0;
+            float depth=1.0-smoothstep(.15,1.0,across);
+            vec3 col=mix(uShallow,uDeep,depth*.85);
+            // fresnel — odraz oblohy pri plochom uhle
+            float fres=pow(1.0-max(dot(n,view),0.0),3.0);
+            col=mix(col,uSky,fres*.55);
+            // slnečný trblet na vlnkách
+            vec3 hv=normalize(uSun+view);
+            float spec=pow(max(dot(n,hv),0.0),90.0);
+            col+=vec3(1.0,.97,.88)*spec*1.4;
+            // svetlé prúdové žilky
+            float streak=noise(vec2(fu.x*1.6,fu.y*5.0));
+            streak=smoothstep(.62,.92,streak);
+            col+=vec3(.75,.88,.9)*streak*.10;
+            // pena pri brehoch — rozbitá šumom, pulzuje
+            float foamN=noise(vec2(fu.x*3.2,vUv.y*14.0+t*.5));
+            float foam=smoothstep(.68,.97,across+foamN*.22-.10);
+            col=mix(col,vec3(.93,.96,.95),foam*.8);
+            // priehľadnosť: plytké kraje priesvitnejšie, hrana mizne do brehu
+            float a=mix(.58,.88,depth);
+            a=max(a,foam*.85);
+            a*=1.0-smoothstep(.93,1.0,across);
+            gl_FragColor=vec4(col,a);
+          }`
+      });
+      forestGroup.add(new THREE.Mesh(ribbon(.85,.11,18),streamMat));
+      window._streamMat2=null;
       // kamene na brehoch
       for(let i=5;i<pts.length-5;i+=8){ const p=pts[i], q=pts[i+1];
         const dx=q.x-p.x, dz=q.z-p.z, L=Math.hypot(dx,dz)||1;
@@ -2456,7 +2718,7 @@ function animate(){
     const mlen=Math.hypot(mx,mz);
     if(mlen>0.08){
       mx/=Math.max(1,mlen); mz/=Math.max(1,mlen);
-      const sp=profile.up.babeta?5.8:(profile.up.boots?4.4:3.0);
+      const sp=(profile.up.babeta?5.8:(profile.up.boots?4.4:3.0))*(inWater()?0.7:1);
       const sin=Math.sin(player.yaw), cos=Math.cos(player.yaw);
       // dopredu = smer pohľadu (joystick hore => mz<0)
       player.x += (mx*cos + mz*sin)*sp*dt;
@@ -2489,9 +2751,20 @@ function animate(){
     homeSmoke.forEach(s=>{ const t=(tnow*.5+s.userData.ph)%3.2;
       s.position.y=4.4+t*.85; s.position.x=1.5+Math.sin(tnow+s.userData.ph)*.18+t*.22;
       s.material.opacity=.5*(1-t/3.2); }); }
+  // sliepky ďobú a obzerajú sa
+  if(window._hens && window._hens.length){ const tnow=now*.001;
+    window._hens.forEach(h=>{
+      const c=(tnow*.9+h.ph)%4;
+      h.head.position.y = c<.8 ? .40-Math.abs(Math.sin(c/.8*Math.PI*2))*.22 : .40; // ďobnutie 2×
+      h.grp.rotation.y += Math.sin(tnow*.35+h.ph)*.002;                            // pomalé otáčanie
+    }); }
 
   // voda tečie + peľ sa vznáša
-  if(streamMat && streamMat.map) streamMat.map.offset.x=(now*.00006)%1;
+  if(streamMat && streamMat.uniforms) streamMat.uniforms.uTime.value=now*.001;
+  else if(streamMat && streamMat.map) streamMat.map.offset.x=(now*.00026)%1;
+  if(window._streamMat2 && window._streamMat2.map){
+    window._streamMat2.map.offset.x=(now*.00058)%1;
+    window._streamMat2.opacity=.24+Math.sin(now*.0021)*.07; }
   if(dustPts){ dustPts.rotation.y+=dt*.012; dustPts.position.y=Math.sin(now*.0004)*.25; }
   // lístie sa pomaly znáša a krúti
   if(leafPts){ const pa=leafPts.geometry.attributes.position, lv=leafPts.userData.v;
@@ -2505,7 +2778,7 @@ function animate(){
   // huby priebežne dorastajú — les sa nevyzbiera do prázdna
   if(terrain!=="doma" && window._regrow && !modal){
     regrowT+=dt;
-    if(regrowT>42){ regrowT=0;
+    if(regrowT>(profile.up.almanach?26:42)){ regrowT=0;
       const live=shrooms.filter(x=>!x.picked).length;
       if(live<46){ const R=window._regrow;
         let r=Math.random()*R.totalW, sp=R.pool[0];
@@ -2579,12 +2852,13 @@ function animate(){
     const pd=Math.hypot(boar.g.position.x-player.x, boar.g.position.z-player.z);
     boar.cool-=dt;
     let speed=0;
-    if(pd<5){ // pred hubárom uteká — ale otáča sa, nie teleport
+    if(pd<(profile.up.repel?9:5)){ // pred hubárom uteká — ale otáča sa, nie teleport
       const fa=Math.atan2(boar.g.position.x-player.x, boar.g.position.z-player.z);
       boar.heading=lerpAng(boar.heading,fa,dt*6); speed=3.2;
     } else if(boar.cool<=0){
       let tgt=null, td=1e9;
       for(const s of shrooms){ if(s.picked) continue;
+        if(profile.up.repel && Math.hypot(s.pos.x-player.x,s.pos.z-player.z)<12) continue;
         const d=Math.hypot(s.pos.x-boar.g.position.x, s.pos.z-boar.g.position.z);
         if(d<td){ td=d; tgt=s; } }
       if(tgt){
@@ -2603,12 +2877,12 @@ function animate(){
       boar.heading+=Math.sin(now*.0013)*dt*.6;
     }
     if(boar){
-      boar.g.rotation.y=boar.heading;
+      boar.g.rotation.y=boar.heading-Math.PI/2;
       boar.g.position.x+=Math.sin(boar.heading)*speed*dt;
       boar.g.position.z+=Math.cos(boar.heading)*speed*dt;
       // krok nôh + kolísanie tela len keď sa hýbe
       boar.walk+=dt*speed*5;
-      boar.legs.forEach((lg,i)=>{ lg.rotation.x=speed? Math.sin(boar.walk+ (i%2? Math.PI:0)+(i>1?Math.PI*.5:0))*.5 : lg.rotation.x*.85; });
+      boar.legs.forEach((lg,i)=>{ lg.rotation.z=speed? Math.sin(boar.walk+ (i%2? Math.PI:0)+(i>1?Math.PI*.5:0))*.5 : lg.rotation.z*.85; });
       boar.g.rotation.z=speed? Math.sin(boar.walk*.5)*.05 : 0;
       boar.g.position.y=gH(boar.g.position.x,boar.g.position.z)+(speed?Math.abs(Math.sin(boar.walk*.5))*.03:0);
     }
@@ -2624,16 +2898,16 @@ function animate(){
       deer.headG.rotation.z=gph<0? gph*1.05 : 0;   // skloní hlavu, popasie sa, zdvihne
       if(dd<8){ deer.state="flee"; deer.t=0;
         const fa=Math.atan2(deer.g.position.x-player.x, deer.g.position.z-player.z);
-        deer.fa=fa; deer.g.rotation.y=fa; deer.headG.rotation.z=.15;
+        deer.fa=fa; deer.g.rotation.y=fa-Math.PI/2; deer.headG.rotation.z=.15;
         toast("🦌 Srnka! Zbadala ťa a uteká."); }
     } else {
       deer.t+=dt;
       deer.fa+=Math.sin(deer.t*1.7)*dt*.35;        // mierne kľukatí medzi stromami
-      deer.g.rotation.y=deer.fa;
+      deer.g.rotation.y=deer.fa-Math.PI/2;
       deer.g.position.x+=Math.sin(deer.fa)*7.5*dt;
       deer.g.position.z+=Math.cos(deer.fa)*7.5*dt;
       deer.g.position.y=gH(deer.g.position.x,deer.g.position.z)+Math.abs(Math.sin(deer.t*9))*.25;
-      deer.legs.forEach((lg,i)=>{ lg.rotation.x=Math.sin(deer.t*14+(i%2?Math.PI:0)+(i>1?Math.PI*.5:0))*.7; });
+      deer.legs.forEach((lg,i)=>{ lg.rotation.z=Math.sin(deer.t*14+(i%2?Math.PI:0)+(i>1?Math.PI*.5:0))*.7; });
       if(deer.t>3.2){ forestGroup.remove(deer.g); deer=null; }
     }
   }
@@ -2645,9 +2919,10 @@ function animate(){
   }
 
   // kroky
+  updateBrook();
   if(!modal){
     if(Math.hypot(joy.x,joy.y)>0.15 || keys["w"]||keys["s"]||keys["a"]||keys["d"]||keys["arrowup"]||keys["arrowdown"]){
-      stepT-=dt; if(stepT<=0){ SFX.step(); stepT=.38; } }
+      stepT-=dt; if(stepT<=0){ if(inWater()){ SFX.splash(); stepT=rnd(.32,.40); } else { SFX.step(); stepT=.38; } } }
   }
 
   // bublina: rázcestník doma / najbližšia huba v lese
@@ -2678,7 +2953,7 @@ function animate(){
   // kompas k najbližšej hube (do 15 m)
   const kEl=document.getElementById("kompas");
   if(profile.up.compass && !modal && terrain!=="doma"){
-    let kr=null, kd=15;
+    let kr=null, kd=profile.up.gps?30:15;
     for(const s of shrooms){ if(s.picked) continue;
       const d=Math.hypot(s.pos.x-player.x, s.pos.z-player.z);
       if(d<kd){ kd=d; kr=s; } }
@@ -2949,11 +3224,16 @@ const SHOP=[
  {id:"compass", name:"Hubárska intuícia (kompas)", price:55, desc:"Kompas v rohu obrazovky ťa zlatou ihlou vedie k najbližšej hube do 15 m."},
  {id:"dryer", name:"Sušička húb Eta", price:120, desc:"Sušené huby sú drahšie — +10 % ku každému predaju."},
  {id:"dog", name:"Pes Bobík 🐕", price:150, desc:"Cvičený na hľuzovky — zavetrí ich pod dubmi."},
- {id:"babeta", name:"Moped Babeta 210", price:220, desc:"Legendárny stroj. Po lese sa presúvaš bleskovo."}
+ {id:"babeta", name:"Moped Babeta 210", price:220, desc:"Legendárny stroj. Po lese sa presúvaš bleskovo."},
+ {id:"termoska", name:"Termoska s kávou", price:90, desc:"S kávou ide všetko lepšie — lesné výzvy dávajú 2× XP."},
+ {id:"gps", name:"GPS lokátor húb", price:120, desc:"Kompas zachytí hubu už na 30 m namiesto 15 m."},
+ {id:"goldknife", name:"Pozlátený nožík", price:200, desc:"Dokonalý rez: očistené huby predáš o 15 % drahšie."},
+ {id:"repel", name:"Plašič diviakov", price:260, desc:"Diviak sa ti zďaleka vyhne a nezje huby vo tvojej blízkosti."},
+ {id:"almanach", name:"Hubársky almanach", price:320, desc:"Vieš, kde rastú: huby v lese dorastajú o polovicu rýchlejšie."}
 ];
 function itemPrice(it){
   const sizeMul = .55 + Math.min(1,Math.max(0,((it.size||1.5)-0.9)/1.7));   // .55–1.55 podľa veľkosti
-  return it.sp.price*sizeMul*(it.pm||1)*(it.twin&&it.twin>1?it.twin*.85:1)*(it.clean?1:0.55)*(it.wormy?0.25:1)*(it.prize?2.5:1)*(profile.up.dryer?1.10:1)*(weather?weather.price:1);
+  return it.sp.price*sizeMul*(profile.up.goldknife&&it.clean?1.15:1)*(it.pm||1)*(it.twin&&it.twin>1?it.twin*.85:1)*(it.clean?1:0.55)*(it.wormy?0.25:1)*(it.prize?2.5:1)*(profile.up.dryer?1.10:1)*(weather?weather.price:1);
 }
 
 /* ---------- odznaky ---------- */
