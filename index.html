@@ -22,8 +22,9 @@
     border-radius:999px;padding:7px 13px;font-size:13.5px;display:flex;align-items:center;gap:6px;
     white-space:nowrap;backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
     box-shadow:0 4px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.08)}
-  #xpwrap{flex:1;min-width:88px;flex-direction:column;align-items:stretch}
-  #xpbar{height:7px;border-radius:99px;background:rgba(243,234,212,.18);overflow:hidden;margin-top:3px}
+  #xpwrap{flex:1;min-width:88px;flex-direction:column;align-items:stretch;overflow:hidden}
+  #lvltxt{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  #xpbar{height:7px;border-radius:99px;background:rgba(243,234,212,.18);overflow:hidden;margin:3px 5px 1px}
   #xpfill{height:100%;width:0%;background:linear-gradient(90deg,var(--okra),var(--zlata));transition:width .4s}
   #lvltxt{font-size:11.5px;letter-spacing:.04em;opacity:.92}
 
@@ -189,6 +190,26 @@
 <div id="deskhint">WASD / šípky = chôdza · ťahaj myšou = rozhliadanie · klik na hubu = inšpekcia</div>
 <div id="vig" style="position:fixed;inset:0;pointer-events:none;z-index:15;
   background:radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(6,12,6,.40) 100%)"></div>
+<div id="loader" style="position:fixed;inset:0;z-index:200;background:#0b1810;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .55s">
+  <svg width="124" height="134" viewBox="0 0 124 134">
+    <defs><clipPath id="ldClip"><rect id="ldRect" x="0" y="134" width="124" height="0"/></clipPath></defs>
+    <g fill="#22301f">
+      <path d="M40,124 Q34,86 42,66 L82,66 Q90,86 84,124 Q62,132 40,124 Z"/>
+      <path d="M14,64 Q16,18 62,14 Q108,18 110,64 Q108,74 62,76 Q16,74 14,64 Z"/>
+    </g>
+    <g clip-path="url(#ldClip)">
+      <path d="M40,124 Q34,86 42,66 L82,66 Q90,86 84,124 Q62,132 40,124 Z" fill="#e9dfc4"/>
+      <path d="M44,72 Q42,95 44,118 M54,70 Q52,98 54,124 M66,70 Q66,98 66,124 M78,72 Q80,95 78,118"
+        stroke="#cabd9a" stroke-width="2" fill="none"/>
+      <path d="M14,64 Q16,18 62,14 Q108,18 110,64 Q108,74 62,76 Q16,74 14,64 Z" fill="#8a6442"/>
+      <path d="M14,64 Q16,18 62,14 Q108,18 110,64 Q90,58 62,57 Q34,58 14,64 Z" fill="#7a5536" opacity=".7"/>
+      <path d="M16,63 Q62,73 108,63 Q108,72 62,75 Q16,72 16,63 Z" fill="#e2d6b4"/>
+    </g>
+  </svg>
+  <div id="ldPct" style="font-size:15px;letter-spacing:.1em;color:#e8dfc8;font-variant-numeric:tabular-nums">0 %</div>
+  <div style="position:fixed;bottom:26px;font-size:13px;color:#9aa888;letter-spacing:.14em">by Richard Rosival</div>
+</div>
 <div id="quests" style="position:fixed;left:12px;top:64px;z-index:21;display:none;max-width:52vw;
   background:rgba(12,26,16,.52);border:1px solid rgba(243,234,212,.20);border-radius:12px;
   padding:7px 11px;font-size:11.5px;line-height:1.6;backdrop-filter:blur(10px) saturate(1.2);
@@ -380,6 +401,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 "use strict";
+/* ---------- úvodná načítavacia obrazovka: huba sa vyfarbuje zdola nahor ---------- */
+(function(){
+  const lr=document.getElementById("ldRect"), lp=document.getElementById("ldPct"),
+        lo=document.getElementById("loader");
+  if(!lr||!lo) return;
+  const t0=performance.now();
+  function step(){
+    const el2=(performance.now()-t0)/1000;
+    const p=Math.min(100, Math.pow(el2/2.3,.8)*100);
+    const hh=134*p/100;
+    lr.setAttribute("y",String(134-hh)); lr.setAttribute("height",String(hh));
+    lp.textContent=Math.floor(p)+" %";
+    if(p<100) requestAnimationFrame(step);
+    else { lo.style.opacity="0"; setTimeout(()=>lo.remove(),600); }
+  }
+  requestAnimationFrame(step);
+})();
 /* =====================================================
    DÁTA — druhy húb (reálne slovenské druhy)
 ===================================================== */
@@ -493,13 +531,13 @@ const SPECIES = [
 
  {id:"plavka_zelena", name:"Plávka zelenkastá", latin:"Russula virescens", type:"edible", price:1.8, xp:14,
   terr:["dub","breza"],
-  draw:{cap:"#8aa05e",capEdge:"#a8bc7a",shape:"bun",cracked:true,stem:"#efece0",under:"#f0ead6"},
+  draw:{cap:"#8aa05e",capEdge:"#a8bc7a",shape:"bun",cracked:true,gilled:true,stem:"#efece0",under:"#f0ead6"},
   traits:[["Klobúk","zelenkastý, rozpukaný na políčka","#8aa05e"],["Spodok","biele krehké lupene","#f0ead6"],["Hlúbik","biely, <b>BEZ prsteňa a BEZ pošvy</b>","#efece0"]],
   hint:"Vyzerá ako muchotrávka zelená! Rozdiel: plávka nemá prsteň ani pošvu a je krehká ako krieda. Over si bázu hlúbika!"},
 
  {id:"podpnovka", name:"Podpňovka obyčajná", latin:"Armillaria mellea", type:"edible", price:0.8, xp:7,
   terr:["smrek","prales"],
-  draw:{cap:"#c89a52",capEdge:"#dab470",shape:"bun",slim:true,stem:"#e8dcb8",ring:true,under:"#e4d8b8",dots:"#6e5430"},
+  draw:{cap:"#c89a52",capEdge:"#dab470",shape:"bun",slim:true,gilled:true,stem:"#e8dcb8",ring:true,under:"#e4d8b8",dots:"#6e5430"},
   traits:[["Klobúk","medovo hnedý s drobnými šupinkami","#b08a4a"],["Rastie","v trsoch na pňoch a dreve",null],["Hlúbik","s prsteňom, tuhý","#a8895a"]],
   hint:"Opeňky — rastú v chumáčoch na pňoch. Jedlé len uvarené, hlúbiky sa nejedia."}
 ];
@@ -916,6 +954,50 @@ function stemGeo(rTop,rBot,h,belly,bend){
     g.computeVertexNormals();
   }
   return g;
+}
+/* kuriatko: súvislá trúbka — hlúbik plynulo prechádza do lievika so zvlneným okrajom */
+function chanterelleGeo(r,h){
+  const pts=[], N=16;
+  for(let i=0;i<=N;i++){ const t=i/N;
+    const flare = t<.45 ? .20+.10*(t/.45) : .30+.70*Math.pow((t-.45)/.55,1.6);
+    pts.push(new THREE.Vector2(r*flare, h*t)); }
+  pts.push(new THREE.Vector2(r*.55,h*.93));   // stred klobúka mierne preliačený
+  pts.push(new THREE.Vector2(r*.18,h*.88));
+  pts.push(new THREE.Vector2(0,h*.90));
+  const g=new THREE.LatheGeometry(pts,30);
+  const pos=g.attributes.position, sd=Math.random()*9;
+  for(let i=0;i<pos.count;i++){ const y=pos.getY(i);
+    if(y>h*.55){ const a=Math.atan2(pos.getZ(i),pos.getX(i)), k=(y-h*.55)/(h*.45);
+      const w=1+(Math.sin(a*3+sd)*.10+Math.sin(a*5+sd*2)*.06)*k;   // mäkké laloky, žiadna hviezda
+      pos.setX(i,pos.getX(i)*w); pos.setZ(i,pos.getZ(i)*w);
+      pos.setY(i, y + Math.sin(a*4+sd*3)*.08*h*k); } }              // okraj sa vlní aj hore-dole
+  g.computeVertexNormals(); return g;
+}
+const chantCache={};
+function chanterelleMat(d){
+  const key=d.cap;
+  if(!chantCache[key]){
+    const c=document.createElement("canvas"); c.width=256; c.height=128;
+    const x=c.getContext("2d");
+    const base=new THREE.Color(d.cap);
+    const g2=x.createLinearGradient(0,128,0,0);     // v=0 noha, v=1 stred lievika
+    g2.addColorStop(0,"#"+base.clone().multiplyScalar(1.14).getHexString());
+    g2.addColorStop(.5,"#"+base.getHexString());
+    g2.addColorStop(1,"#"+base.clone().multiplyScalar(.84).getHexString());
+    x.fillStyle=g2; x.fillRect(0,0,256,128);
+    // hrubé zbiehavé lišty po vonkajšku lievika
+    for(let i=0;i<64;i++){ const px=i/64*256+rnd(-1,1);
+      x.strokeStyle=`rgba(150,95,12,${rnd(.10,.22)})`; x.lineWidth=rnd(.9,1.7);
+      x.beginPath(); x.moveTo(px,110); x.lineTo(px+rnd(-3,3),32); x.stroke();
+      x.strokeStyle=`rgba(255,236,168,${rnd(.10,.20)})`; x.lineWidth=1;
+      x.beginPath(); x.moveTo(px+1.7,110); x.lineTo(px+rnd(-2,4),34); x.stroke(); }
+    for(let i=0;i<50;i++){ x.fillStyle=`rgba(120,72,10,${rnd(.04,.10)})`;
+      x.beginPath(); x.ellipse(Math.random()*256,Math.random()*128,rnd(2,8),rnd(1.5,5),rnd(0,3),0,7); x.fill(); }
+    chantCache[key]=sRGBTex(c);
+  }
+  const m=new THREE.MeshStandardMaterial({map:chantCache[key],roughness:.58,metalness:0,side:THREE.DoubleSide});
+  m.color.setScalar(rnd(.95,1.08));
+  return m;
 }
 /* skutočné lupene — radiálne lamely visiace pod klobúkom */
 function gillGeo(rIn,rOut,drop,n){
@@ -2108,16 +2190,25 @@ function shroomMesh(sp, scale){
 
   if(d.shape==="tuber"){
     /* hľuzovka: čierna hrudka, z väčšej časti v zemi — vidno len kopček */
-    const tub=new THREE.Mesh(new THREE.DodecahedronGeometry(.075*scale,0),capMat);
-    tub.scale.set(1.15,.8,1); tub.position.y=.012*scale; g.add(tub);
+    const tub=new THREE.Mesh(lumpy(new THREE.DodecahedronGeometry(.075*scale,1),.16),capMat);
+    tub.scale.set(1.15,.8,1); tub.rotation.y=rnd(0,6.3); tub.position.y=.012*scale; g.add(tub);
     const dirt=new THREE.Mesh(new THREE.SphereGeometry(.10*scale,7,5),mat("#4a3a26"));
     dirt.scale.y=.32; dirt.position.y=.005; g.add(dirt);
 
   } else if(d.shape==="puff"){
-    /* vatovec: veľká biela guľa */
-    const ball=new THREE.Mesh(new THREE.SphereGeometry(.13*scale,10,8),capMat);
-    ball.scale.y=.88; ball.position.y=.105*scale; g.add(ball);
-    const foot=new THREE.Mesh(new THREE.CylinderGeometry(.05*scale,.06*scale,.05*scale,8),mat(d.stem));
+    /* vatovec: hrboľatá biela guľa s jemne zrnitým povrchom */
+    if(!window._puffTex){ const pc=document.createElement("canvas"); pc.width=pc.height=128;
+      const px2=pc.getContext("2d"); px2.fillStyle="#efe9d8"; px2.fillRect(0,0,128,128);
+      for(let i=0;i<600;i++){ px2.fillStyle=Math.random()<.5?"rgba(200,188,160,.35)":"rgba(255,252,244,.5)";
+        px2.beginPath(); px2.arc(Math.random()*128,Math.random()*128,rnd(.7,1.8),0,7); px2.fill(); }
+      for(let i=0;i<30;i++){ px2.fillStyle="rgba(170,155,120,.22)";  // jemné plôšky ako rozpukaný povrch
+        px2.beginPath(); px2.ellipse(Math.random()*128,Math.random()*128,rnd(4,10),rnd(3,7),rnd(0,3),0,7); px2.fill(); }
+      window._puffTex=sRGBTex(pc); }
+    const pm2=new THREE.MeshStandardMaterial({map:window._puffTex,roughness:.85,metalness:0});
+    pm2.color.setScalar(rnd(.95,1.05));
+    const ball=new THREE.Mesh(lumpy(new THREE.SphereGeometry(.13*scale,14,11),.07),pm2);
+    ball.scale.y=.92; ball.position.y=.115*scale; ball.rotation.y=rnd(0,6.3); g.add(ball);
+    const foot=new THREE.Mesh(new THREE.CylinderGeometry(.045*scale,.06*scale,.06*scale,9),pm2);
     foot.position.y=.02*scale; g.add(foot);
 
   } else if(d.shape==="parasol"){
@@ -2143,11 +2234,11 @@ function shroomMesh(sp, scale){
       ring.rotation.x=Math.PI/2; ring.position.y=stemH*.72; g.add(ring); }
 
   } else if(d.shape==="funnel"){
-    const h=.11*scale, body=new THREE.Mesh(funnelGeo(.085*scale,h),
-      new THREE.MeshLambertMaterial({color:new THREE.Color(d.cap),side:THREE.DoubleSide}));
+    const h=.13*scale;
+    const body=new THREE.Mesh(chanterelleGeo(.072*scale,h),chanterelleMat(d));
+    body.rotation.y=rnd(0,6.3);
+    body.rotation.z=rnd(-.10,.10); body.rotation.x=rnd(-.10,.10);
     g.add(body);
-    const foot=new THREE.Mesh(stemGeo(.020*scale,.014*scale,.045*scale,0),mat(d.stem||d.cap));
-    g.add(foot);
 
   } else if(d.volva){
     const stemH=.17*scale, vb=rnd(-.012,.012)*scale;
@@ -2179,22 +2270,28 @@ function shroomMesh(sp, scale){
     const stout=!!d.stemBulb;
     const slim=!!d.slim;
     const mat01=Math.min(1,Math.max(0,(scale-0.9)/1.7));   // zrelosť 0..1
-    let thick=rnd(.95,1.5);                                 // individuálna hrúbka
-    if(slim) thick*= .38;                                   // opeňky: tenučké hlúbiky
-    const stemH=((stout?.085:(slim?.145:.105))+.055*mat01)*scale;
-    const belly=(stout? (.020-.008*mat01) : .006)*scale*thick;
+    // pravé hríby: niekedy až súdkovitý hlúbik; kozáky/masliaky/suchohríby/plávky: štíhle
+    let thick = stout ? rnd(1.0,1.85) : rnd(.72,1.0);
+    if(slim) thick*= .42;                                   // opeňky: tenučké hlúbiky
+    const stemH=((stout?.082:(slim?.145:.110))+.055*mat01)*scale;
+    const belly=(stout? (.026-.008*mat01) : .004)*scale*thick;
     const bend=rnd(-.016,.016)*scale*(slim?1.6:1);   // hlúbik rastie mierne nakrivo
     const stem=new THREE.Mesh(
-      stemGeo((stout?.037:.024)*scale*thick,(stout?.054:.032)*scale*thick,stemH,belly,bend),
+      stemGeo((stout?.040:.019)*scale*thick,(stout?.058:.026)*scale*thick,stemH,belly,bend),
       getStemMat(d));
     g.add(stem);
     const capR=((stout? .080+.038*mat01 : .070+.028*mat01)*(slim?.62:1))*scale;
     const capH=capR*(.95-.42*mat01);
-    const pores=new THREE.Mesh(new THREE.CylinderGeometry(capR*.76,capR*.48,.011*scale,22),makeUnderMat(d,false));
+    const isGill=!!d.gilled;
+    const pores=new THREE.Mesh(new THREE.CylinderGeometry(capR*.76,capR*.48,isGill?.009*scale:.011*scale,22),makeUnderMat(d,isGill));
     const oldT=Math.max(0,(mat01-.45)/.55);   // staré kusy: rúrky žltnú až zelenajú
-    if(oldT>0 && !d.dots) pores.material.color.lerp(new THREE.Color(0x9aa64c), oldT*.75);
+    if(oldT>0 && !d.dots && !isGill) pores.material.color.lerp(new THREE.Color(0x9aa64c), oldT*.75);
     if(oldT>.3) capMat.color.multiplyScalar(.93); // klobúk matnie
     pores.position.set(bend,stemH-.002*scale,0); g.add(pores);
+    if(isGill){ // skutočné lamely aj pri plávkach a podpňovkách
+      const fins=new THREE.Mesh(gillGeo(capR*.22,capR*.86,.014*scale,26),
+        new THREE.MeshLambertMaterial({color:new THREE.Color(d.under||"#f0ead6").multiplyScalar(.9),side:THREE.DoubleSide}));
+      fins.position.set(bend,stemH-.0005*scale,0); g.add(fins); }
     const cap=new THREE.Mesh(capGeo(capR,capH,1.25+1.3*mat01),capMat);
     cap.position.set(bend,stemH+.004*scale,0);
     cap.rotation.z=rnd(-.06,.06); cap.rotation.x=rnd(-.06,.06);
@@ -2208,11 +2305,11 @@ function shroomMesh(sp, scale){
   }
   // machový venček okolo päty — huba "sedí" v zemi, nie na nej
   if(d.shape!=="tuber"){ const mossN=2+Math.floor(rnd(0,3));
-    for(let i=0;i<mossN;i++){ const a=rnd(0,6.283), mr=rnd(.02,.05)*scale;
-      const mt=new THREE.Mesh(lumpy(new THREE.SphereGeometry(rnd(.014,.028)*scale,6,5),.2),
+    for(let i=0;i<mossN;i++){ const a=rnd(0,6.283), mr=rnd(.055,.095)*scale;   // venček OKOLO päty, nie na hlúbiku
+      const mt=new THREE.Mesh(lumpy(new THREE.SphereGeometry(rnd(.011,.022)*scale,6,5),.2),
         new THREE.MeshLambertMaterial({color:new THREE.Color().setHSL(.28,.45,rnd(.18,.30))}));
-      mt.scale.y=.5;
-      mt.position.set(Math.cos(a)*mr,.004,Math.sin(a)*mr); g.add(mt); } }
+      mt.scale.y=.45;
+      mt.position.set(Math.cos(a)*mr,.003,Math.sin(a)*mr); g.add(mt); } }
 
   // tieňový fliačik pod hubou — pomáha ju zbadať
   const blob=new THREE.Mesh(new THREE.PlaneGeometry(.5*scale,.5*scale),
@@ -2698,7 +2795,8 @@ function toast(msg,cls=""){ const t=document.createElement("div"); t.className="
 function eur(x){ return x.toFixed(2).replace(".",",")+" €"; }
 function refreshHUD(){
   const lv=LV(profile.xp), lo=lvlBase(lv), hi=lvlBase(lv+1);
-  $("lvltxt").textContent=`${profile.name||"Hubár"} · Lv ${lv} · ${profile.xp} XP`;
+  const xpTxt = profile.xp>=1000 ? (profile.xp/1000).toFixed(1).replace(".",",")+"k" : profile.xp;
+  $("lvltxt").textContent=`${profile.name||"Hubár"} · Lv ${lv} · ${xpTxt} XP`;
   $("xpfill").style.width=Math.min(100,(profile.xp-lo)/(hi-lo)*100)+"%";
   $("money").textContent=profile.money.toFixed(2).replace(".",",");
   $("basketCnt").textContent=basket.length; $("basketMax").textContent=basketMax();
