@@ -202,12 +202,37 @@
   <div class="pill">🧺 <span id="basketCnt">0</span>/<span id="basketMax">8</span></div>
   <div class="pill">🍄 <span id="shroomLeft">0</span></div>
 </div>
+<div id="stamWrap" style="display:none;position:fixed;top:48px;left:12px;right:12px;z-index:19;pointer-events:none">
+  <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--papier);text-shadow:0 1px 3px rgba(0,0,0,.65)">
+    <span id="stamIco">🔆</span>
+    <div style="flex:1;height:6px;border-radius:99px;background:rgba(8,16,10,.5);overflow:hidden;border:1px solid rgba(243,234,212,.16)">
+      <div id="stamFill" style="height:100%;width:100%;background:linear-gradient(90deg,#9ccb5a,#cfe08a);transition:width .25s,background .4s"></div>
+    </div>
+    <span id="stamTxt" style="font-variant-numeric:tabular-nums;min-width:30px;text-align:right">100%</span>
+  </div>
+</div>
 <div id="vig" style="position:fixed;inset:0;pointer-events:none;z-index:15;
   background:radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(6,12,7,.42) 100%)"></div>
+<div id="seasonTint" style="position:fixed;inset:0;pointer-events:none;z-index:13;opacity:0;transition:opacity 1s,background 1.2s;mix-blend-mode:soft-light"></div>
+<div id="dusk" style="position:fixed;inset:0;pointer-events:none;z-index:14;opacity:0;transition:opacity 1.1s;
+  background:radial-gradient(ellipse at 50% 36%, rgba(40,24,8,0) 28%, rgba(22,12,5,.6) 100%)"></div>
 <div id="flash" style="position:fixed;inset:0;pointer-events:none;z-index:16;opacity:0;
   background:rgba(186,44,32,.38);transition:opacity .5s"></div>
 <div id="fade" style="position:fixed;inset:0;pointer-events:none;z-index:80;opacity:0;
   background:#0a0d08;transition:opacity .35s"></div>
+
+<!-- SÚHRN VÝPRAVY -->
+<div class="overlay hidden" id="forayOv">
+  <div class="card">
+    <div class="eyebrow">Koniec výpravy</div>
+    <h2 id="forayTitle">🌲 Výprava skončila</h2>
+    <div class="hintline" id="foraySub" style="margin:4px 0 10px"></div>
+    <div class="traits" id="forayStats"></div>
+    <div id="forayScore" style="text-align:center;font-size:30px;font-weight:bold;font-style:italic;margin:12px 0 2px;color:var(--okra)"></div>
+    <div class="hintline" id="forayBest"></div>
+    <div class="cardbtns"><button class="btn green" id="btnForayHome" style="width:100%">🏡 Domov spočítať úlovok</button></div>
+  </div>
+</div>
 
 <div id="joy"><div id="knob"></div></div>
 <div id="sidebtns">
@@ -283,6 +308,7 @@
     <!-- FÁZA 1: urči hubu skôr, než ju vezmeš -->
     <div id="guessWrap">
       <div id="guessPrompt">Skúmaj znaky a rozhodni sa skôr, než siahneš.</div>
+      <button class="btn ghost hidden" id="btnExamine" style="width:100%;color:var(--atrament);border-color:rgba(43,36,23,.4);margin-bottom:2px">🔬 Preskúmať dôkladnejšie</button>
       <div class="guessrow">
         <button class="btn green" id="btnGuessEdible">🍳 Jedlá</button>
         <button class="btn" id="btnGuessInedible">🌿 Nejedlá</button>
@@ -323,11 +349,22 @@
     <div id="marketList"></div>
     <div class="mrow" style="border-bottom:none;font-size:16px"><span class="nm"><b>Spolu</b></span>
       <span class="price" id="marketTotal">0,00 €</span></div>
-    <div class="cardbtns"><button class="btn green" id="btnSellAll">Predať všetko</button></div>
+    <div class="cardbtns" style="gap:8px"><button class="btn green" id="btnSellAll" style="flex:1">Predať všetko</button><button class="btn ghost" id="btnVitrina" style="flex:1;color:var(--atrament);border-color:rgba(43,36,23,.4)">🏛️ Vitrína</button></div>
     <div class="eyebrow" style="margin-top:16px">Objednávky z reštaurácií</div>
     <div id="ordersList"></div>
     <div class="eyebrow" style="margin-top:16px">Hubárske potreby</div>
     <div id="shopList"></div>
+  </div>
+</div>
+
+<!-- VITRÍNA / VÝSTAVA — vrcholová zbierka najlepších kusov -->
+<div class="overlay hidden" id="vitrinaOv">
+  <div class="card">
+    <button class="closex" data-close="vitrinaOv">✕</button>
+    <div class="eyebrow">Tvoja chata · výstavná skriňa</div>
+    <h2>🏛️ Vitrína húb</h2>
+    <div class="hintline" id="vitrinaHead" style="margin:2px 0 10px;text-align:left"></div>
+    <div id="vitrinaList"></div>
   </div>
 </div>
 
@@ -337,6 +374,7 @@
     <button class="closex" data-close="menuOv">✕</button>
     <div class="eyebrow">Kam na huby?</div>
     <h2>Vyber si les</h2>
+    <div id="seasonBanner" class="hintline" style="margin:2px 0 8px;font-size:13.5px"></div>
     <div id="terrList"></div>
     <div class="hintline">Každý les má iné druhy. Vyššie levely odomykajú vzácnejšie miesta.</div>
   </div>
@@ -481,6 +519,10 @@
       <div class="ruleitem"><span class="ic">⚖️</span><span class="tx">Najprv hubu <b>urči sám</b>: jedlá, nejedlá, či jedovatá? Meno sa odhalí až po tvojom rozhodnutí — za správne určenie máš XP a zapíšeš si druh do denníka.</span></div>
       <div class="ruleitem"><span class="ic">⚠️</span><span class="tx">Skúmaj znaky: klobúk, spodok, hlúbik, prsteň, pošvu. Dvojníci klamú! Označiť jedovatú ako jedlú = otrava, pokuta a koniec série.</span></div>
       <div class="ruleitem"><span class="ic">🧺</span><span class="tx">Jedlé očisti a predaj na trhu. Za peniaze kúpiš nôž, atlas, gumáky aj krošňu — a vylepšíš chatu.</span></div>
+      <div class="ruleitem"><span class="ic">🔆</span><span class="tx">Každá <b>výprava</b> má výdrž (lišta hore) — míňa sa chôdzou a zberom, nie časom. Keď dôjde, stmieva sa a vraciaš sa domov so <b>skóre výpravy</b>. Čižmy a babeta výdrž šetria, čelovka ju zväčší.</span></div>
+      <div class="ruleitem"><span class="ic">🍂</span><span class="tx">Každá výprava posunie <b>ročné obdobie</b> (leto → jeseň → zima → jar). Jeseň je najbohatšia, zima najchudobnejšia. Niektoré druhy rastú len v jednej sezóne — denník dokončíš až za celý rok.</span></div>
+      <div class="ruleitem"><span class="ic">🎓</span><span class="tx">Za <b>správne určenie</b> získavaš vedomosti (📖 denník). Míňaš ich na majstrovstvá, ktoré ťa robia lepším určovateľom — napr. dôkladnú obhliadku či znalosť dvojníkov. Nedajú sa kúpiť za peniaze.</span></div>
+      <div class="ruleitem"><span class="ic">🏛️</span><span class="tx">Na trhu nájdeš <b>Vitrínu</b> — namiesto predaja môžeš najlepší kus druhu vystaviť. Veľké, výstavné a zrastené kusy majú vyššiu kvalitu. Kompletná výstava = titul Kurátor.</span></div>
     </div>
     <div class="cardbtns"><button class="btn green" data-close="helpOv">Rozumiem</button></div>
   </div>
@@ -506,6 +548,36 @@
   }
   requestAnimationFrame(step);
 })();
+/* =====================================================
+   ⚙️ TUNE — JEDINÉ miesto na ladenie hry.
+   Po piatich systémoch sú tu zhromaždené všetky čísla, ktoré
+   sa pri testovaní oplatí meniť. Uprav hodnotu, ulož, obnov stránku.
+   (Hru testuj „od nuly“ cez Nastavenia → vymazať postup.)
+===================================================== */
+const TUNE={
+  // VÝPRAVA / VÝDRŽ (krok 2) — dĺžka jedného behu
+  stam:{ max:100, lampBonus:20, babetaMaxBonus:10,
+         drainPerM:0.42,   // míňanie na meter chôdze (väčšie = kratšia výprava)
+         pick:3.6,         // míňanie na pozbieranú hubu
+         bitter:4, poison:10,   // míňanie pri omyle
+         bootsMul:0.7, babetaMul:0.55,  // násobiče šetrenia (menšie = šetrnejšie)
+         examineCost:6 },  // výdrž za „Dôkladnú obhliadku“ (krok 4)
+  // SEZÓNY (krok 3) — tempo roka a hustota húb
+  season:{ foraysPer:3,    // koľko výprav = jedna sezóna
+           cntMul:{leto:1.0, jesen:1.28, zima:0.45, jar:0.72} },  // hustota húb
+  // SKÓRE VÝPRAVY (krok 2)
+  score:{ perCorrect:5, perMistake:8 },
+  // OTRAVA (krok 1/2) — sila trestu za zjedenie jedovatej
+  poison:{ fineBase:8, fineToxicExtra:6, repLoss:8 },
+  // VEDOMOSTI (krok 4) — zárobok za správne určenie + majstrovstvo
+  know:{ edible:1, inedible:2, toxic:3, masteryBonus:3, masterAt:3, majstrovstvoMul:1.4 },
+  // CENY MAJSTROVSTIEV (krok 4) — vo vedomostiach
+  perkCost:{ obhliadka:18, dvojnici:12, toxikologia:14, majstrovstvo:22 },
+  // XP za správne určenie (krok 1)
+  idXp:{ edible:6, inedibleSafe:6, toxicSafe:8 },
+  // VITRÍNA (krok 5)
+  exhibitionReward:600
+};
 /* =====================================================
    DÁTA — druhy húb (reálne slovenské druhy)
 ===================================================== */
@@ -627,8 +699,110 @@ const SPECIES = [
   terr:["smrek","prales"],
   draw:{cap:"#c89a52",capEdge:"#dab470",shape:"bun",slim:true,gilled:true,stem:"#e8dcb8",ring:true,under:"#e4d8b8",dots:"#6e5430"},
   traits:[["Klobúk","medovo hnedý s drobnými šupinkami","#b08a4a"],["Rastie","v trsoch na pňoch a dreve",null],["Hlúbik","s prsteňom, tuhý","#a8895a"]],
-  hint:"Opeňky — rastú v chumáčoch na pňoch. Jedlé len uvarené, hlúbiky sa nejedia."}
+  hint:"Opeňky — rastú v chumáčoch na pňoch. Jedlé len uvarené, hlúbiky sa nejedia."},
+
+ {id:"plamienka", name:"Plamienka zimná", latin:"Flammulina velutipes", type:"edible", price:1.4, xp:13,
+  terr:["smrek","dub","breza","prales"],
+  draw:{cap:"#d98a36",capEdge:"#ecae5c",shape:"bun",slim:true,gilled:true,gloss:true,stem:"#6f4c22",under:"#f0e2bc"},
+  traits:[["Klobúk","oranžovo-hnedý, lesklý, v mraze slizký","#d98a36"],["Spodok","svetlokrémové lupene","#f0e2bc"],["Hlúbik","k báze tmavý, zamatovo plstnatý","#6f4c22"],["Rastie","v trsoch na dreve aj cez mrazy",null]],
+  hint:"Zimná huba — raší na dreve od jesene cez mráz. Dvojník: jedovatá češuľka (Galerina) — tá má prsteň a hnedé lupene.",
+  warn:"To nebola plamienka. Pozor na jedovatú češuľku — má prsteň a hrdzavé lupene."}
 ];
+
+/* =====================================================
+   SEZÓNY — posúvajú sa DOKONČENÝMI VÝPRAVAMI (deň), nie
+   reálnym časom. Menia roster druhov + hustotu + náladu.
+   Pár druhov je sezónne výhradných → denník/„Znalca“ sa
+   nedá dokončiť bez hrania naprieč celým rokom.
+===================================================== */
+const SEASONS=[
+ {id:"leto",  name:"Leto",  ico:"☀️", tint:"rgba(255,206,90,.09)",  cntMul:TUNE.season.cntMul.leto},
+ {id:"jesen", name:"Jeseň", ico:"🍂", tint:"rgba(206,116,40,.17)",  cntMul:TUNE.season.cntMul.jesen},
+ {id:"zima",  name:"Zima",  ico:"❄️", tint:"rgba(150,200,235,.20)", cntMul:TUNE.season.cntMul.zima},
+ {id:"jar",   name:"Jar",   ico:"🌱", tint:"rgba(120,184,92,.14)",  cntMul:TUNE.season.cntMul.jar}
+];
+const FORAYS_PER_SEASON=TUNE.season.foraysPer;   // 3 výpravy = 1 sezóna → rok za 12 výprav
+function seasonIdx(){ return Math.floor((profile.day||0)/FORAYS_PER_SEASON)%4; }
+function curSeason(){ return SEASONS[seasonIdx()]; }
+function seasonDayInfo(){ const d=(profile.day||0);
+  return {season:curSeason(), dayInSeason:(d%FORAYS_PER_SEASON)+1, year:Math.floor(d/(FORAYS_PER_SEASON*4))+1}; }
+const SEASON_SP={
+ hrib_smrekovy:{in:["leto","jesen"],peak:"jesen"},
+ hrib_dubovy:{in:["jar","leto","jesen"],peak:"jar"},
+ hrib_bronzovy:{in:["leto"]},                  /* LETNÁ rarita */
+ kuriatko:{in:["jar","leto","jesen"],peak:"jesen"},
+ bedla:{in:["jar","leto","jesen"],peak:"jesen"},
+ kozak:{in:["jar","leto","jesen"]},
+ kozak_osikovy:{in:["jar","leto","jesen"]},
+ masliak:{in:["jesen"],peak:"jesen"},
+ suchohrib:{in:["jar","leto","jesen"],peak:"jesen"},
+ horciak:{in:["jar","leto","jesen"]},
+ liska_or:{in:["jesen"]},
+ mucho_cervena:{in:["jesen"],peak:"jesen"},     /* JESENNÁ */
+ mucho_zelena:{in:["leto","jesen"]},
+ mucho_tigrovana:{in:["leto","jesen"]},
+ vatovec:{in:["leto","jesen"],peak:"jesen"},
+ hluzovka:{in:["leto"]},                        /* LETNÁ (+ pes) */
+ modrak:{in:["jar","leto","jesen"]},
+ plavka_zelena:{in:["jar","leto"],peak:"leto"},
+ podpnovka:{in:["jesen","zima"],peak:"jesen"},  /* JESEŇ→ZIMA */
+ plamienka:{in:["zima"]}                         /* ZIMNÁ exkluzivita */
+};
+function spSeasons(sp){ return SEASON_SP[sp.id] || {in:["leto","jesen"]}; }
+function seasonFactor(sp){ const s=curSeason().id, m=spSeasons(sp);
+  if(!m.in.includes(s)) return 0; return m.peak===s?1.9:1; }
+function seasonIcons(sp){ const m=spSeasons(sp);
+  return SEASONS.filter(se=>m.in.includes(se.id)).map(se=>se.ico).join(""); }
+
+/* =====================================================
+   VEDOMOSTI — mena, ktorú zarobíš LEN správnym určením.
+   Nemíňa sa za peniaze; robí ťa LEPŠÍM určovateľom, nie bohatším.
+   Žiadny perk neobchádza odhad — buď pridá rozhodnutie, alebo dá
+   vodítko za cenu (výdrž).
+===================================================== */
+const MASTER_AT=TUNE.know.masterAt;   // počet správnych určení = „ovládaš druh"
+const LOOKALIKE=new Set(["hrib_smrekovy","kuriatko","bedla","plavka_zelena","plamienka","modrak","kozak"]);
+const PERKS=[
+ {id:"obhliadka", name:"🔬 Dôkladná obhliadka", cost:TUNE.perkCost.obhliadka,
+   desc:"V určovaní pribudne „Preskúmať“ — za trochu výdrže ti pripomenie rozlišovacie vodítko. Hubu aj tak musíš určiť sám."},
+ {id:"dvojnici", name:"⚠️ Znalosť dvojníkov", cost:TUNE.perkCost.dvojnici,
+   desc:"Pri druhoch s nebezpečným dvojníkom ťa karta upozorní na opatrnosť. Neprezradí odpoveď."},
+ {id:"toxikologia", name:"🧪 Toxikológia", cost:TUNE.perkCost.toxikologia,
+   desc:"Vieš si poradiť po otrave — pokuta za ošetrenie je polovičná. Stratu XP, série a skóre to nemení."},
+ {id:"majstrovstvo", name:"🎓 Majstrovstvo", cost:TUNE.perkCost.majstrovstvo,
+   desc:"Z druhov, ktoré ovládaš, máš pri správnom určení +40 % vedomostí a +30 % XP. Nabaľuje sa."}
+];
+let perkNudged=false;
+function hasPerk(id){ return !!(profile.perks&&profile.perks[id]); }
+function idCount(id){ return (profile.idCorrect&&profile.idCorrect[id])||0; }
+function isMastered(id){ return idCount(id)>=MASTER_AT; }
+function masteredCount(){ return SPECIES.filter(s=>isMastered(s.id)).length; }
+function gainKnowledge(n){ if(n<=0) return; profile.know=(profile.know||0)+n;
+  const next=PERKS.filter(p=>!hasPerk(p.id)).sort((a,b)=>a.cost-b.cost)[0];
+  if(next && profile.know>=next.cost && !perkNudged){ perkNudged=true;
+    toast(`📚 Máš dosť vedomostí na: ${next.name}. Otvor 📖 denník.`); } }
+/* zápočet správneho určenia — jediný zdroj vedomostí */
+function creditId(sp){
+  if(!profile.idCorrect) profile.idCorrect={};
+  const before=idCount(sp.id), after=before+1;
+  profile.idCorrect[sp.id]=after;
+  const baseK = sp.type==="toxic"?TUNE.know.toxic : sp.type==="inedible"?TUNE.know.inedible : TUNE.know.edible;
+  const mastered = after>=MASTER_AT;
+  let k = (hasPerk("majstrovstvo")&&mastered)? Math.round(baseK*TUNE.know.majstrovstvoMul) : baseK;
+  if(before<MASTER_AT && after>=MASTER_AT){ k+=TUNE.know.masteryBonus;
+    toast(`📖 <b>Ovládaš ${sp.name}!</b> Druh máš v malíčku.`,"gold"); }
+  gainKnowledge(k);
+  if(hasPerk("majstrovstvo") && mastered)
+    gainXP(Math.max(1, Math.round(sp.xp>0? sp.xp*0.3 : 2)), "🎓 majstrovstvo — istá ruka");
+}
+function buyPerk(id){
+  const p=PERKS.find(x=>x.id===id); if(!p||hasPerk(id)) return;
+  if((profile.know||0) < p.cost){ toast("📚 Ešte nemáš dosť vedomostí — určuj správne huby.","bad"); return; }
+  profile.know-=p.cost; profile.perks=profile.perks||{}; profile.perks[id]=true;
+  perkNudged=false; SFX.level();
+  toast(`🎓 Nové majstrovstvo: <b>${p.name}</b>!`,"gold");
+  checkBadges(); save(); openAtlas();
+}
 
 const TERRAINS = {
  doma:{name:"Doma", ico:"🏡", lvl:1, desc:"Tvoj dvor pod horou — odtiaľto vyrážaš na huby.",
@@ -697,13 +871,13 @@ const TERRAINS = {
 const profile = { xp:0, money:0, up:{knife:false,atlas:false,boots:false,basket:0,dog:false,lamp:false,compass:false,dryer:false,babeta:false},
   found:{}, known:{}, badges:{}, big:null,
   stats:{found:0,earned:0,avoided:0,ordersDone:0,prizeFound:0,bigDone:0},
-  world:{},
+  world:{}, bestForay:0, day:0, know:0, idCorrect:{}, perks:{}, trophies:{},
   settings:{invert:true,dense:true,sound:true,shadows:true} };
 let terrain="doma", basket=[], orders=[], weather=null;
 const CABINSPOT={x:2.6,z:2.4};
 function resetProfile(){ profile.xp=0; profile.money=0;
   profile.up={knife:false,atlas:false,boots:false,basket:0,dog:false,lamp:false,compass:false,dryer:false,babeta:false};
-  profile.found={}; profile.known={}; profile.badges={}; profile.big=null; profile.world={}; profile.daily=null; profile.cabin={}; profile.rep=0; profile.dog=null;
+  profile.found={}; profile.known={}; profile.badges={}; profile.big=null; profile.world={}; profile.daily=null; profile.cabin={}; profile.rep=0; profile.dog=null; profile.bestForay=0; profile.day=0; profile.know=0; profile.idCorrect={}; profile.perks={}; profile.trophies={}; profile._exhibitDone=false;
   profile.stats={found:0,earned:0,avoided:0,ordersDone:0,prizeFound:0,bigDone:0};
   basket=[]; orders=[]; weather=null; }
 function spawn(){ if(terrain==="doma"){ player.x=0; player.z=6; }
@@ -729,7 +903,7 @@ async function load(){ let v=null;
     // migrácia starých uložení: už pozbierané jedlé druhy považuj za naučené
     if(!Object.keys(profile.known).length && profile.found){
       Object.keys(profile.found).forEach(id=>{ profile.known[id]=true; }); }
-    profile.cabin=p.cabin||{}; profile.daily=p.daily||null; profile.rep=p.rep||0; profile.dog=p.dog||null;
+    profile.cabin=p.cabin||{}; profile.daily=p.daily||null; profile.rep=p.rep||0; profile.dog=p.dog||null; profile.bestForay=p.bestForay||0; profile.day=p.day||0; profile.know=p.know||0; profile.idCorrect=p.idCorrect||{}; profile.perks=p.perks||{}; profile.trophies=p.trophies||{}; profile._exhibitDone=!!p._exhibitDone;
     profile.stats=Object.assign({found:0,earned:0,avoided:0,ordersDone:0,prizeFound:0,bigDone:0},p.stats);
     profile.settings=Object.assign({invert:true,dense:true,sound:true,shadows:true},p.settings); }catch(e){} }
 }
@@ -2924,14 +3098,19 @@ function buildForest(){
   scene.add(forestGroup);
 
   /* --- HUBY --- */
-  const pool = SPECIES.filter(s=> !s.needsDog &&
+  let pool = SPECIES.filter(s=> !s.needsDog &&
     (T.pool ? T.pool.includes(s.id) : s.terr.includes(terrain)));
-  const weights = pool.map(s=> s.rare? 0.16*weather.rare*(T.rareMul||1)
+  // v zime raší zimná huba na dreve vo všetkých lesoch — aby les nikdy nebol prázdny
+  if(curSeason().id==="zima"){ const pl=SPECIES.find(s=>s.id==="plamienka");
+    if(pl && !pool.includes(pl)) pool=pool.concat(pl); }
+  const baseW = s=> s.rare? 0.16*weather.rare*(T.rareMul||1)
     : s.type==="top"? 0.55*(T.topBoost||1)
-    : s.type==="edible"?1.4 : s.type==="inedible"?0.85 : 0.8);
-  const totalW = weights.reduce((a,b)=>a+b,0);
+    : s.type==="edible"?1.4 : s.type==="inedible"?0.85 : 0.8;
+  let weights = pool.map(s=> baseW(s)*seasonFactor(s));
+  let totalW = weights.reduce((a,b)=>a+b,0);
+  if(totalW<=0){ weights=pool.map(baseW); totalW=weights.reduce((a,b)=>a+b,0); } // poistka
   const baseCnt = terrain==="prales"? 40 : 32;
-  const cnt = Math.round(baseCnt*(T.cntMul||1)*weather.cnt*((tripMod&&tripMod.spawnMul)||1)) + Math.floor(Math.random()*8);
+  const cnt = Math.round(baseCnt*(T.cntMul||1)*weather.cnt*curSeason().cntMul*((tripMod&&tripMod.spawnMul)||1)) + Math.floor(Math.random()*8);
   let placed=0, guard=0;
   while(placed<cnt && guard++<cnt*30){
     let r=Math.random()*totalW, sp=pool[0];
@@ -2943,7 +3122,7 @@ function buildForest(){
     if(streamDistAt(x,z)<2.2) continue; // nič nerastie v koryte potoka
     // trsy: kuriatka a líšky v skupinkách, hríby rastú v hniezdach v machu
     const isBolete = sp.type==="top" || (sp.draw && sp.draw.shape==="bun" && sp.type==="edible");
-    const clusterN = sp.id==="podpnovka" ? 5+Math.floor(Math.random()*4)
+    const clusterN = (sp.id==="podpnovka"||sp.id==="plamienka") ? 5+Math.floor(Math.random()*4)
       : (sp.id==="kuriatko"||sp.id==="liska_or") ? 1+Math.floor(Math.random()*3)
       : (sp.type==="top") ? 1+Math.floor(Math.random()*3)
       : (isBolete && Math.random()<.35) ? 2 : 1;
@@ -2956,7 +3135,7 @@ function buildForest(){
   }
   /* opeňky na pňoch */
   const armSp=SPECIES.find(s=>s.id==="podpnovka");
-  if(armSp && (T.pool? T.pool.includes("podpnovka") : armSp.terr.includes(terrain)) && stumpPts.length){
+  if(armSp && seasonFactor(armSp)>0 && (T.pool? T.pool.includes("podpnovka") : armSp.terr.includes(terrain)) && stumpPts.length){
     for(let i=0;i<2;i++){ const st=stumpPts[Math.floor(Math.random()*stumpPts.length)];
       const tn=5+Math.floor(Math.random()*4);
       for(let k=0;k<tn;k++) addShroom3D(armSp, st.x+rnd(-.45,.45), st.z+rnd(-.45,.45)); } }
@@ -2976,7 +3155,7 @@ function buildForest(){
 
   /* hľuzovky — len so psom, len pod dubmi */
   const truffleSp=SPECIES.find(s=>s.id==="hluzovka");
-  const truffleHere = T.pool ? T.pool.includes("hluzovka") : truffleSp.terr.includes(terrain);
+  const truffleHere = (T.pool ? T.pool.includes("hluzovka") : truffleSp.terr.includes(terrain)) && seasonFactor(truffleSp)>0;
   if(profile.up.dog && truffleHere){
     const tn=Math.round(((T.truffleBoost?4:2)+Math.floor(Math.random()*3))*dogScent());
     for(let i=0;i<tn;i++){ const tr=treePts[Math.floor(Math.random()*treePts.length)];
@@ -3022,6 +3201,7 @@ function buildForest(){
 
   window._regrow={pool,weights,totalW};
   makeQuests(pool);
+  applySeasonVisual();
   if(terrain!=="doma") setTimeout(showBrief,650);
   setTimeout(collectPassive,1400);
 
@@ -3398,7 +3578,7 @@ document.getElementById("lupa").addEventListener("pointerdown",e=>{
 ===================================================== */
 let lastT=performance.now(), nearestRec=null, lupaAction=null;
 const lupaEl=document.getElementById("lupa");
-const OVERLAYS=["inspectOv","cleanOv","marketOv","menuOv","atlasOv","introOv","setOv","helpOv","nameOv","cookOv","walletOv"];
+const OVERLAYS=["inspectOv","cleanOv","marketOv","menuOv","atlasOv","introOv","setOv","helpOv","nameOv","cookOv","walletOv","forayOv","vitrinaOv"];
 const anyModal=()=>OVERLAYS.some(id=>!document.getElementById(id).classList.contains("hidden"));
 const SIGN={x:3.2,z:4.5};
 function showLupaAt(wx,wy,wz,txt,act){
@@ -3443,6 +3623,7 @@ function animate(){
         player.z=Math.max(-3.8,Math.min(3.8,player.z));
       } else if(dR>WORLD_R){ player.x*=WORLD_R/dR; player.z*=WORLD_R/dR; }
       qEvent("dist", sp*dt);
+      drainStamina(sp*dt*DRAIN_PER_M);
     } else player.bob*=0.9;
   }
 
@@ -3974,6 +4155,86 @@ function refreshHUD(){
   $("money").textContent=profile.money.toFixed(2).replace(".",",");
   $("basketCnt").textContent=basket.length; $("basketMax").textContent=basketMax();
 }
+/* =====================================================
+   VÝPRAVA — ohraničený beh. Výdrž/svetlo sa míňa ČINNOSŤOU
+   (chôdza + zber + omyly), nie reálnym časom. Beh sa končí
+   vyčerpaním alebo návratom domov a dá skóre + rekord.
+===================================================== */
+let forayActive=false, stamina=100, staminaMax=100;
+let foray={val:0,xp:0,picked:0,correct:0,mistakes:0,bestPrice:0,bestName:""};
+let forayLowWarned=false, forayMidWarned=false;
+const DRAIN_PER_M=TUNE.stam.drainPerM, DRAIN_PICK=TUNE.stam.pick, DRAIN_BITTER=TUNE.stam.bitter, DRAIN_POISON=TUNE.stam.poison;
+function staMax(){ return TUNE.stam.max + (profile.up.lamp?TUNE.stam.lampBonus:0) + (profile.up.babeta?TUNE.stam.babetaMaxBonus:0); }
+function staDrainMul(){ return profile.up.babeta?TUNE.stam.babetaMul : profile.up.boots?TUNE.stam.bootsMul : 1; }
+function startForay(){
+  staminaMax=staMax(); stamina=staminaMax; forayActive=true;
+  foray={val:0,xp:0,picked:0,correct:0,mistakes:0,bestPrice:0,bestName:""};
+  forayLowWarned=false; forayMidWarned=false;
+  $("stamWrap").style.display="block"; updateStaminaHUD();
+  const i=seasonDayInfo();
+  setTimeout(()=>toast(`${i.season.ico} <b>${i.season.name}</b> · deň ${i.dayInSeason} výpravy`),300);
+}
+function applySeasonVisual(){
+  const el=$("seasonTint"); if(!el) return;
+  const forage = terrain!=="doma" && terrain!=="interier";
+  el.style.background=curSeason().tint;
+  el.style.opacity = forage ? 1 : 0;
+}
+function updateStaminaHUD(){
+  const p=Math.max(0,Math.min(100, stamina/staminaMax*100));
+  $("stamFill").style.width=p+"%"; $("stamTxt").textContent=Math.round(p)+"%";
+  $("stamFill").style.background = p>50 ? "linear-gradient(90deg,#9ccb5a,#cfe08a)"
+    : p>22 ? "linear-gradient(90deg,#e0b34a,#caa05a)" : "linear-gradient(90deg,#c4503f,#d6543f)";
+  $("stamIco").textContent = p>50?"🔆":p>22?"⛅":"🌇";
+  $("dusk").style.opacity = p<45 ? Math.min(.85,(45-p)/45).toFixed(2) : 0;
+}
+function drainStamina(n){
+  if(!forayActive) return;
+  stamina-=n*staDrainMul();
+  if(stamina<=0){ stamina=0; updateStaminaHUD(); endForay("vyčerpaný"); return; }
+  if(stamina<=22 && !forayLowWarned){ forayLowWarned=true;
+    toast("🌇 Stmieva sa a nohy ťažknú — čoskoro to budeš musieť zabaliť.","bad"); }
+  else if(stamina<=50 && !forayMidWarned){ forayMidWarned=true; toast("⛅ Polovica výdrže za tebou."); }
+  updateStaminaHUD();
+}
+function forayScore(){ return Math.max(0, Math.round(foray.val) + foray.xp + foray.correct*TUNE.score.perCorrect - foray.mistakes*TUNE.score.perMistake); }
+function endForay(reason){
+  if(!forayActive) return;
+  forayActive=false;
+  $("stamWrap").style.display="none"; $("dusk").style.opacity=0;
+  const played=seasonDayInfo();
+  const score=forayScore(), best=profile.bestForay||0, isRecord=score>best;
+  if(isRecord) profile.bestForay=score;
+  profile.day=(profile.day||0)+1;      // výprava = deň → posúva sezónu
+  const next=seasonDayInfo();
+  const changed = next.season.id!==played.season.id;
+  $("forayTitle").textContent = reason==="vyčerpaný" ? "🌇 Súmrak — výprava skončila" : "🌲 Výprava skončila";
+  $("foraySub").textContent = reason==="vyčerpaný"
+    ? "Vyčerpal si sily aj svetlo. Čas pobrať sa domov." : "Vraciaš sa z lesa s plným košíkom.";
+  $("forayStats").innerHTML=
+     `<div><b>Sezóna</b><span>${played.season.ico} ${played.season.name} · deň ${played.dayInSeason}</span></div>`
+    +`<div><b>Nazbierané</b><span>${foray.picked} húb do košíka</span></div>`
+    +`<div><b>Hodnota v koši</b><span>${eur(foray.val)}</span></div>`
+    +`<div><b>Skúsenosti</b><span>+${foray.xp} XP</span></div>`
+    +`<div><b>Určovanie</b><span>${foray.correct}× správne · ${foray.mistakes}× omyl</span></div>`
+    +(foray.bestName?`<div><b>Najlepší kus</b><span>${foray.bestName} (${eur(foray.bestPrice)})</span></div>`:"");
+  $("forayScore").textContent="Skóre " + score;
+  $("forayBest").innerHTML = (isRecord ? `🏆 <b>Nový rekord výpravy!</b> (predtým ${best})` : `Najlepšia výprava doteraz: ${best}`)
+    + (changed ? `<br>${next.season.ico} <b>Prichádza ${next.season.name}</b> — les sa zmení.` : "");
+  save(); $("forayOv").classList.remove("hidden");
+}
+$("btnForayHome").onclick=()=>{
+  $("forayOv").classList.add("hidden");
+  fadeTo(()=>{ terrain="doma"; spawn(); buildForest(); refreshHUD();
+    toast("🏡 Doma. Úlovok môžeš predať na trhu."); });
+};
+/* tally pre najlepší kus výpravy */
+function forayNote(it){
+  foray.picked++;
+  const v=(typeof itemPrice==="function")?itemPrice(it):(it.sp.price||0);
+  foray.val+=v;
+  if(v>foray.bestPrice){ foray.bestPrice=v; foray.bestName=it.sp.name; }
+}
 /* ---------- CHATA: nekonečný endgame — investuj zarobené, získaj trvalé výhody ---------- */
 const CABIN=[
  {id:"susiaren", name:"🏚️ Sušiareň húb", base:180, desc:"Každá výprava ti pri návrate prinesie pasívny príjem zo sušených húb.",
@@ -4088,6 +4349,7 @@ function addRep(n){
   refreshHUD(); save();
 }
 function gainXP(n,why){
+  if(forayActive && n>0) foray.xp+=n;
   const before=LV(profile.xp);
   profile.xp=Math.max(0,profile.xp+n);
   const after=LV(profile.xp);
@@ -4128,9 +4390,26 @@ function openInspect(rec){
     : (profile.known[sp.id] ? "Tento druh už poznáš — over si znaky a potvrď."
                             : "Nový druh. Rozhodni sa podľa znakov; po určení si ho zapíšeš do denníka.");
   $("guessPrompt").textContent = "Skúmaj znaky a rozhodni sa skôr, než siahneš.";
+  // Znalosť dvojníkov — upozorní na opatrnosť, neprezradí odpoveď
+  if(hasPerk("dvojnici") && LOOKALIKE.has(sp.id)){
+    $("guessPrompt").innerHTML = "⚠️ <b>Tento druh máva nebezpečného dvojníka</b> — over si znaky obzvlášť dôkladne.";
+  }
+  // Dôkladná obhliadka — voliteľná akcia za výdrž
+  const exBtn=$("btnExamine");
+  if(hasPerk("obhliadka")){ exBtn.classList.remove("hidden"); exBtn.disabled=false;
+    exBtn.textContent="🔬 Preskúmať dôkladnejšie"; }
+  else exBtn.classList.add("hidden");
   $("guessWrap").classList.remove("hidden");
   $("actWrap").classList.add("hidden");
   $("inspectOv").classList.remove("hidden");
+}
+function examineMushroom(){
+  const rec=currentInspect; if(!rec || !hasPerk("obhliadka")) return;
+  const exBtn=$("btnExamine"); if(exBtn.disabled) return;
+  exBtn.disabled=true; exBtn.textContent="🔬 Preskúmané";
+  if(forayActive) drainStamina(TUNE.stam.examineCost);
+  // dá vodítko (rozlišovací znak), NIE verdikt — určiť ju musíš stále sám
+  $("insHint").textContent = "🔬 " + rec.sp.hint;
 }
 function closeInspect(){ $("inspectOv").classList.add("hidden"); currentInspect=null; }
 function revealName(sp){
@@ -4159,7 +4438,8 @@ function resolveGuess(guess){
   if(truth==="edible"){
     if(guess==="edible"){
       setVerdict("ok",`✅ Správne — <b>${sp.name}</b> je jedlá. Môžeš ju odrezať.`);
-      learn(6,"správne určenie — jedlá"); showPick(); return;
+      if(forayActive) foray.correct++;
+      creditId(sp); learn(TUNE.idXp.edible,"správne určenie — jedlá"); showPick(); return;
     }
     setVerdict("warn",`🌿 Bola to <b>${sp.name}</b> — jedlá. Nechal si dobrý kus, no opatrnosť netrestáme.`);
     gainXP(1,"radšej nechať, keď si si nie istý"); showClose("Nechať rásť"); return;
@@ -4167,7 +4447,7 @@ function resolveGuess(guess){
   if(truth==="inedible"){
     if(guess==="inedible"){
       setVerdict("ok",`✅ Správne — <b>${sp.name}</b> je nepožívateľná. Dobré oko!`);
-      profile.stats.avoided++; learn(6,"správne určenie — nepožívateľná"); showClose("Nechať rásť"); return;
+      profile.stats.avoided++; if(forayActive) foray.correct++; creditId(sp); learn(TUNE.idXp.inedibleSafe,"správne určenie — nepožívateľná"); showClose("Nechať rásť"); return;
     }
     if(guess==="toxic"){
       setVerdict("warn",`🟡 Bezpečné — <b>${sp.name}</b> nie je jedovatá, len nepožívateľná. Hlavne že si ju nezjedol.`);
@@ -4175,34 +4455,39 @@ function resolveGuess(guess){
     }
     setVerdict("bad",`❌ Omyl — <b>${sp.name}</b> je nepožívateľná! ${sp.warn||"Pokazila by celé jedlo."}`);
     popShroom(rec); SFX.bad(); flashRed();
+    if(forayActive){ foray.mistakes++; drainStamina(DRAIN_BITTER); }
     if((profile.streak||0)>=3) toast("🔥 Séria prerušená — omyl ťa stál bonusy.","bad");
     profile.streak=0; gainXP(sp.xp,"zle určená huba"); checkBadges(); showClose("Ďalej"); return;
   }
   // truth === toxic
   if(guess==="toxic"){
     setVerdict("ok",`✅ Výborne — <b>${sp.name}</b> je <b>jedovatá</b>. Ruky preč, necháš ju lesu.`);
-    profile.stats.avoided++; learn(8,"rozpoznaná jedovatá huba"); showClose("Nechať rásť"); return;
+    profile.stats.avoided++; if(forayActive) foray.correct++; creditId(sp); learn(TUNE.idXp.toxicSafe,"rozpoznaná jedovatá huba"); showClose("Nechať rásť"); return;
   }
   if(guess==="inedible"){
     setVerdict("warn",`🟡 Pozor — <b>${sp.name}</b> je dokonca <b>jedovatá</b>, nielen nepožívateľná. Ale nezjedol si ju.`);
     profile.stats.avoided++; learn(4,"bezpečne odmietnutá"); showClose("Nechať rásť"); return;
   }
   setVerdict("bad",`☠️ OMYL! <b>${sp.name}</b> je jedovatá. ${sp.warn||"Skončil si u lekára."}`);
-  popShroom(rec); SFX.bad(); flashRed(); poison(sp); showClose("Ďalej");
+  popShroom(rec); SFX.bad(); flashRed();
+  if(forayActive){ foray.mistakes++; drainStamina(DRAIN_POISON); }
+  poison(sp); showClose("Ďalej");
 }
 function poison(sp){
   if((profile.streak||0)>=3) toast("🔥 Séria zničená omylom.","bad");
   profile.streak=0;
   gainXP(sp.xp,"OTRAVA — zle určená jedovatá huba");
-  const fine=Math.min(profile.money, 8+(sp.type==="toxic"?6:0));
+  let fine=Math.min(profile.money, TUNE.poison.fineBase+(sp.type==="toxic"?TUNE.poison.fineToxicExtra:0));
+  if(hasPerk("toxikologia")) fine=Math.round(fine*0.5);
   if(fine>0){ profile.money-=fine; toast(`💸 Ošetrenie a strata dôvery: −${eur(fine)}`,"bad"); }
-  if(profile.rep) profile.rep=Math.max(0, profile.rep-8);
+  if(profile.rep) profile.rep=Math.max(0, profile.rep-TUNE.poison.repLoss);
   checkBadges(); refreshHUD(); save();
 }
 $("btnGuessEdible").onclick=()=>resolveGuess("edible");
 $("btnGuessInedible").onclick=()=>resolveGuess("inedible");
 $("btnGuessToxic").onclick=()=>resolveGuess("toxic");
 $("btnGuessLeave").onclick=closeInspect;
+$("btnExamine").onclick=examineMushroom;
 $("btnLeave").onclick=closeInspect;
 function popShroom(m){
   m.picked=true;
@@ -4277,7 +4562,8 @@ $("cleanCanvas").addEventListener("pointerdown",e=>{
 function finishClean(clean){
   const m=currentClean.m, wormy=currentClean.wormy;
   basket.push({sp:m.sp, clean, prize:!!m.prize, size:m.size||1.5, wormy, twin:m.twin||1,
-    pm:(TERRAINS[terrain]&&TERRAINS[terrain].priceMul)||1});
+    seas:curSeason().id, pm:(TERRAINS[terrain]&&TERRAINS[terrain].priceMul)||1});
+  if(forayActive){ forayNote(basket[basket.length-1]); drainStamina(DRAIN_PICK); }
   profile.found[m.sp.id]=(profile.found[m.sp.id]||0)+1;
   profile.stats.found++;
   if(m.prize) profile.stats.prizeFound++;
@@ -4343,8 +4629,10 @@ const BADGES=[
  {id:"hluzovkar",n:"Hľuzovkár",d:"Nájdi hľuzovku",r:25,c:()=>!!profile.found["hluzovka"]},
  {id:"zberatel",n:"Zberateľ",d:"Nájdi všetky zbierateľné druhy",r:40,
    c:()=>SPECIES.filter(s=>s.type!=="toxic"&&s.type!=="inedible").every(s=>profile.found[s.id])},
- {id:"znalec",n:"Znalec húb",d:"Zapíš do denníka všetky druhy (aj jedovaté)",r:55,
+ {id:"znalec",n:"Znalec húb",d:"Zapíš do denníka všetky druhy — vrátane sezónnych (letná rarita, zimná huba…)",r:55,
    c:()=>SPECIES.every(s=>profile.known[s.id])},
+ {id:"kurator",n:"Kurátor",d:"Vystav najlepší kus každého druhu vo vitríne",r:80,
+   c:()=>SPECIES.every(s=>profile.trophies&&profile.trophies[s.id])},
  {id:"dodavatel",n:"Dodávateľ",d:"Splň 10 objednávok",r:20,c:()=>profile.stats.ordersDone>=10},
  {id:"velko",n:"Veľkoobchodník",d:"Splň veľkozákazku",r:30,c:()=>profile.stats.bigDone>=1},
  {id:"vystava",n:"Na výstavu",d:"Nájdi výstavný kus ✨",r:10,c:()=>profile.stats.prizeFound>=1},
@@ -4535,15 +4823,24 @@ $("btnMarket").onclick=openMarket;
 function openMenu(){
   const L=$("terrList"); L.innerHTML="";
   const lv=LV(profile.xp);
+  const si=seasonDayInfo();
+  $("seasonBanner").innerHTML=`Ročné obdobie: <b>${si.season.ico} ${si.season.name}</b> · deň ${si.dayInSeason}/${FORAYS_PER_SEASON} · rok ${si.year} <br><span style="opacity:.7">Každá výprava posunie deň. Niektoré druhy nájdeš len v určitej sezóne.</span>`;
   profile.world=profile.world||{};
   Object.entries(TERRAINS).forEach(([k,t])=>{
     if(t.world) return;
     const b=document.createElement("button"); b.className="terr"; b.disabled=lv<t.lvl;
     b.innerHTML=`<span class="ico">${t.ico}</span><span><b>${t.name}</b>${k===terrain?" · si tu":""}<small>${t.desc}</small></span>`
       +(lv<t.lvl?`<span class="lock">🔒 Lv ${t.lvl}</span>`:"");
-    b.onclick=()=>{ terrain=k; spawn(); buildForest();
+    b.onclick=()=>{
       $("menuOv").classList.add("hidden");
-      if(k==="doma") toast("🏡 Vitaj doma."); }; 
+      if(k==="doma"){
+        if(forayActive){ endForay("návrat"); return; }   // súhrn sa postará o návrat domov
+        terrain=k; spawn(); buildForest(); toast("🏡 Vitaj doma."); return;
+      }
+      const fresh=!forayActive;                            // les→les pokračuje v tej istej výprave
+      terrain=k; spawn(); buildForest();
+      if(fresh) startForay();
+    };
     L.appendChild(b);
   });
   /* 🗺️ svetové expedície */
@@ -4566,8 +4863,10 @@ function openMenu(){
         toast(`✈️ Letenka kúpená: <b>${t.name}</b>!`,"gold");
         gainXP(20,"svetobežník");
       }
+      const fresh=!forayActive;
       terrain=k; spawn(); buildForest();
       $("menuOv").classList.add("hidden");
+      if(fresh) startForay();
       toast(`${t.ico} <b>${t.name}</b> — ${t.spec}.`);
     };
     L.appendChild(b);
@@ -4591,6 +4890,20 @@ function openAtlas(){
   const knownN=SPECIES.filter(s=>profile.known[s.id]).length;
   bh+=`<div class="eyebrow" style="margin:6px 0">Denník druhov — zapísané ${knownN}/${SPECIES.length}</div>`;
   L.innerHTML=bh;
+  // --- VEDOMOSTI + perky (na vrchu denníka) ---
+  const pw=document.createElement("div"); pw.style.marginBottom="12px";
+  pw.innerHTML=`<div class="eyebrow" style="margin:2px 0 4px">🎓 Vedomosti — zarobíš ich len správnym určovaním</div>
+    <div class="hintline" style="text-align:left;margin:0 0 8px">📚 Vedomosti: <b>${profile.know||0}</b> · ovládaš <b>${masteredCount()}/${SPECIES.length}</b> druhov<br><span style="opacity:.7">${MASTER_AT}× správne určenie = ovládaš druh. Perky ťa robia lepším určovateľom, nie bohatším.</span></div>`;
+  PERKS.forEach(p=>{
+    const owned=hasPerk(p.id);
+    const row=document.createElement("div"); row.className="shoprow";
+    row.innerHTML=`<span>${p.name}<small>${p.desc}</small></span>`;
+    const b=document.createElement("button"); b.className="buy";
+    if(owned){ b.textContent="✓"; b.disabled=true; }
+    else { b.textContent=`${p.cost} 📚`; b.disabled=(profile.know||0)<p.cost; b.onclick=()=>buyPerk(p.id); }
+    row.appendChild(b); pw.appendChild(row);
+  });
+  L.insertBefore(pw, L.firstChild);
   $("atlasTitle").textContent = profile.up.atlas? "Hubársky denník" : "Denník (bez atlasu)";
   const tagN={top:["top","NAJ"],edible:["ed","JEDLÁ"],inedible:["ined","NEJEDLÁ"],toxic:["tox","JEDOVATÁ"],rare:["top","RARITA 🏆"]};
   // najprv zapísané, potom neurčené ako siluety na dolovanie
@@ -4606,10 +4919,11 @@ function openAtlas(){
     if(learned){
       const [cls,txt]=tagN[sp.type];
       const n=profile.found[sp.id]||0;
+      const mast = isMastered(sp.id) ? ` <span style="color:var(--zlata,#e0b34a);font-weight:bold;font-size:12px">🎓 ovládaš</span>` : (idCount(sp.id)?` <span style="opacity:.6;font-size:11px">určené ${idCount(sp.id)}/${MASTER_AT}</span>`:"");
       const detail = profile.up.atlas
-        ? `<i style="opacity:.6">${sp.latin}</i> · ${sp.price?`výkup ${eur(sp.price)}/ks`:"bez ceny"}<br>${sp.hint}`
-        : `<span style="opacity:.6">Kúp si atlas na trhu pre latinský názov a znaky.</span>`;
-      info.innerHTML=`<b>${sp.name}</b><span class="tag ${cls}">${txt}</span>${n?` <span style="color:var(--mach);font-weight:bold;font-size:12px">✓ ${n}×</span>`:""}<br>${detail}`;
+        ? `<i style="opacity:.6">${sp.latin}</i> · ${sp.price?`výkup ${eur(sp.price)}/ks`:"bez ceny"}<br>${sp.hint}<br><span style="opacity:.85">Sezóna: ${seasonIcons(sp)}</span>`
+        : `<span style="opacity:.6">Kúp si atlas na trhu pre latinský názov a znaky.</span><br><span style="opacity:.85">Sezóna: ${seasonIcons(sp)}</span>`;
+      info.innerHTML=`<b>${sp.name}</b><span class="tag ${cls}">${txt}</span>${n?` <span style="color:var(--mach);font-weight:bold;font-size:12px">✓ ${n}×</span>`:""}${mast}<br>${detail}`;
     } else {
       info.innerHTML=`<b style="opacity:.55">❓ Neurčený druh</b><br><span style="opacity:.5">Nájdi ho v lese a správne urči, aby si ho zapísal do denníka.</span>`;
     }
@@ -4618,6 +4932,71 @@ function openAtlas(){
   $("atlasOv").classList.remove("hidden");
 }
 $("btnAtlas").onclick=openAtlas;
+
+/* =====================================================
+   VITRÍNA — vrcholová zbierka: vystav najlepší kus každého druhu.
+   Pridáva rozhodnutie „predať vs. nechať si trofej“ a kvalitatívny
+   cieľ na vrchole (nie ďalšie čísla hore).
+===================================================== */
+function trophyQuality(t){ if(!t) return 0;
+  let q=Math.min(60,(t.size||1.5)*20);
+  if(t.prize) q+=25;
+  if(t.twin>1) q+=8*(t.twin-1);
+  return Math.round(q); }
+function basketBestFor(spId){ let best=null;
+  basket.forEach((it,idx)=>{ if(it.sp.id!==spId) return;
+    const c={size:it.size,prize:it.prize,twin:it.twin,seas:it.seas,_idx:idx};
+    if(!best || trophyQuality(c)>trophyQuality(best)) best=c; });
+  return best; }
+function exhibitN(){ return SPECIES.filter(s=>profile.trophies&&profile.trophies[s.id]).length; }
+function exhibitPoints(){ return SPECIES.reduce((a,s)=>a+trophyQuality(profile.trophies&&profile.trophies[s.id]),0); }
+function checkExhibitionComplete(){
+  if(profile._exhibitDone) return;
+  if(exhibitN()>=SPECIES.length){ profile._exhibitDone=true;
+    const reward=TUNE.exhibitionReward; profile.money+=reward; profile.stats.earned+=reward;
+    SFX.level&&SFX.level();
+    toast(`🏛️ <b>VÝSTAVA KOMPLETNÁ!</b> Múzeum ti dalo ${eur(reward)} a titul Kurátor.`,"gold");
+    save(); }
+}
+function enshrine(spId){
+  const cand=basketBestFor(spId);
+  if(!cand){ toast("Tento druh nemáš v košíku.","bad"); return; }
+  const cur=profile.trophies&&profile.trophies[spId];
+  if(cur && trophyQuality(cur)>=trophyQuality(cand)){ toast("Vystavená trofej je rovnako dobrá alebo lepšia."); return; }
+  basket.splice(cand._idx,1);                    // kus si necháš — nepredáš ho
+  profile.trophies=profile.trophies||{};
+  profile.trophies[spId]={size:cand.size,prize:cand.prize,twin:cand.twin,seas:cand.seas,day:profile.day||0};
+  const sp=SPECIES.find(s=>s.id===spId);
+  SFX.coin&&SFX.coin();
+  toast(`🏛️ <b>${sp.name}</b> vystavený vo vitríne!`,"gold");
+  checkBadges(); refreshHUD(); save();
+  checkExhibitionComplete();
+  openVitrina(); openMarket();
+}
+function openVitrina(){
+  const L=$("vitrinaList"); L.innerHTML="";
+  const n=exhibitN();
+  $("vitrinaHead").innerHTML=`Vystavené <b>${n}/${SPECIES.length}</b> druhov · kvalita zbierky <b>${exhibitPoints()} b.</b>${profile._exhibitDone?" · 🏛️ <b>Kurátor</b>":""}<br><span style="opacity:.7">Vystav najlepší kus každého druhu — nepredáš ho. Lepší kus starý nahradí. Veľkosť, výstavné a zrastené kusy = vyššia kvalita.</span>`;
+  const seasIco=id=>{ const se=SEASONS.find(s=>s.id===id); return se?se.ico:""; };
+  SPECIES.forEach(sp=>{
+    const t=profile.trophies&&profile.trophies[sp.id];
+    const cand=basketBestFor(sp.id);
+    const canBeat = cand && (!t || trophyQuality(cand)>trophyQuality(t));
+    const row=document.createElement("div"); row.className="shoprow";
+    let label;
+    if(t){ const cm=Math.round((t.size||1.5)*6);
+      label=`<b>${sp.name}</b><small>vystavený: ${cm} cm${t.prize?" · ✨ výstavný":""}${t.twin>1?" · 👯 zrastený":""} ${seasIco(t.seas)} · kvalita ${trophyQuality(t)}</small>`; }
+    else label=`<b style="opacity:.6">${sp.name}</b><small style="opacity:.6">prázdny slot</small>`;
+    row.innerHTML=`<span>${label}</span>`;
+    const b=document.createElement("button"); b.className="buy";
+    if(canBeat){ b.textContent = t? `Nahradiť (${trophyQuality(cand)})` : `Vystaviť (${trophyQuality(cand)})`; b.onclick=()=>enshrine(sp.id); }
+    else if(t){ b.textContent="✓"; b.disabled=true; }
+    else { b.textContent="—"; b.disabled=true; }
+    row.appendChild(b); L.appendChild(row);
+  });
+  $("vitrinaOv").classList.remove("hidden");
+}
+$("btnVitrina").onclick=openVitrina;
 
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).classList.add("hidden"));
 
