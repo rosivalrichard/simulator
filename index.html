@@ -1885,7 +1885,7 @@ function buildForest(){
     if(itier>=2){
       // kreslo pri krbe, čelom k ohňu
       const ch=new THREE.Group(); const chM=M(0x6e4a2c);
-      ch.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(.7,.25,.7),chM),{position:new THREE.Vector3(0,.4,0)}));
+      const seat=new THREE.Mesh(new THREE.BoxGeometry(.7,.25,.7),chM); seat.position.set(0,.4,0); ch.add(seat);
       const chBack=new THREE.Mesh(new THREE.BoxGeometry(.7,.6,.18),chM); chBack.position.set(0,.7,-.28); ch.add(chBack);
       [[-.34],[.34]].forEach(px=>{ const arm=new THREE.Mesh(new THREE.BoxGeometry(.16,.4,.7),chM); arm.position.set(px[0],.5,0); ch.add(arm); });
       const cush=new THREE.Mesh(new THREE.BoxGeometry(.62,.14,.6),M(0x8a4a3a)); cush.position.set(0,.56,.03); ch.add(cush);
@@ -2026,11 +2026,11 @@ function buildForest(){
     const ridge=new THREE.Mesh(new THREE.BoxGeometry(BW+overhX*2,.14,.26),
       new THREE.MeshLambertMaterial({color:0x3e281a}));
     ridge.position.set(0,ridgeY+.02,0); cab.add(ridge);
-    // dva trojuholníkové štíty
+    // dva trojuholníkové štíty — po celom pôdoryse strechy, nech sedí bez medzery
     const gableShape=new THREE.Shape();
-    gableShape.moveTo(-halfZ,0); gableShape.lineTo(halfZ,0); gableShape.lineTo(0,ridgeY-wallTop); gableShape.closePath();
+    gableShape.moveTo(-(halfZ+overhZ),0); gableShape.lineTo(halfZ+overhZ,0); gableShape.lineTo(0,ridgeY-wallTop); gableShape.closePath();
     const gableGeo=new THREE.ExtrudeGeometry(gableShape,{depth:.12,bevelEnabled:false});
-    [[BW/2],[-BW/2]].forEach(sx=>{
+    [[BW/2+overhX],[-(BW/2+overhX)]].forEach(sx=>{
       const gbl=new THREE.Mesh(gableGeo,bodyMat);
       gbl.rotation.y=Math.PI/2;
       gbl.position.set(sx[0],wallTop,0);
@@ -2191,17 +2191,17 @@ function buildForest(){
     const spz=new THREE.Mesh(new THREE.BoxGeometry(.03,.11,.40),
       new THREE.MeshLambertMaterial({color:0xe8e8e0}));
     spz.position.set(1.73,.52,0); car.add(spz);
-    car.position.set(4.8,0,6.6); car.rotation.y=-.25; forestGroup.add(car);
-    treePts.push({x:4.8,z:6.6,r:1.9});
+    car.position.set(3.5,0,6.6); car.rotation.y=-1.5; forestGroup.add(car);
+    treePts.push({x:3.5,z:6.6,r:1.9});
     // štrk pod autom — tmavý, so skutočnou textúrou kamienkov
     { const gc=document.createElement("canvas"); gc.width=gc.height=128;
       const gx2=gc.getContext("2d"); gx2.fillStyle="#6e675a"; gx2.fillRect(0,0,128,128);
       for(let i=0;i<420;i++){ gx2.fillStyle=`rgba(${Math.random()<.5?'40,36,28':'150,142,124'},${rnd(.3,.7)})`;
         gx2.beginPath(); gx2.ellipse(Math.random()*128,Math.random()*128,rnd(1.2,3.4),rnd(1,2.6),rnd(0,3),0,7); gx2.fill(); }
       const gt=sRGBTex(gc); gt.wrapS=gt.wrapT=THREE.RepeatWrapping; gt.repeat.set(2,6);
-      const grav=new THREE.Mesh(new THREE.PlaneGeometry(3.4,10),
+      const grav=new THREE.Mesh(new THREE.PlaneGeometry(3.0,10),
         new THREE.MeshLambertMaterial({map:gt}));
-      grav.rotation.x=-Math.PI/2; grav.position.set(4.0,.015,8.4); forestGroup.add(grav); }
+      grav.rotation.x=-Math.PI/2; grav.position.set(3.5,.015,8.6); forestGroup.add(grav); }
     // zátišie: košík s hubami pri chodníku (kulisa úvodného menu)
     { const weave=document.createElement("canvas"); weave.width=64; weave.height=64;
       const wx=weave.getContext("2d"); wx.fillStyle="#8a5e32"; wx.fillRect(0,0,64,64);
@@ -2459,7 +2459,7 @@ function buildForest(){
     const posts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.05,.06,1.0,6),fenceM,postN);
     const rails=new THREE.InstancedMesh(new THREE.CylinderGeometry(.032,.032,1,5),fenceM,postN*2);
     const FR=15;
-    const gatePost=i=>(i>=5&&i<=7), gateRail=i=>(i>=4&&i<=7);  // vpredu otvorená brána — nie zatvorený kruh
+    const gatePost=i=>(i===7), gateRail=i=>(i>=5&&i<=7);  // p7 = pešia brána; medzi p5–p6 = príjazd pre auto
     for(let i=0;i<postN;i++){ const a=i/postN*6.283, a2=(i+1)/postN*6.283;
       const x1=Math.cos(a)*FR, z1=Math.sin(a)*FR-2, x2=Math.cos(a2)*FR, z2=Math.sin(a2)*FR-2;
       if(gatePost(i)) setInst(posts,i,0,0,0,0,0,0,0);           // skrytý kôl v bráne
@@ -2493,6 +2493,15 @@ function buildForest(){
         brace.position.set(off,0,.03); brace.rotation.z=.5; leaf.add(brace);
         leaf.position.set(hx,.62,0); leaf.rotation.y=dir*1.15; gate.add(leaf); });
       gate.position.set(-1.2,0,12.9); forestGroup.add(gate); }
+    // spojovacie žrde: pešia brána -> susedné koly plota (p6 vpravo, p8 vľavo)
+    { const cR=new THREE.InstancedMesh(new THREE.CylinderGeometry(.032,.032,1,5),fenceM,4);
+      const p=i=>[Math.cos(i/postN*6.283)*FR, Math.sin(i/postN*6.283)*FR-2];
+      const conns=[[-0.25,12.9,...p(6)],[-2.15,12.9,...p(8)]];  // gate-pravý->p6, gate-ľavý->p8
+      let ci=0;
+      conns.forEach(c=>{ const mx=(c[0]+c[2])/2,mz=(c[1]+c[3])/2,seg=Math.hypot(c[2]-c[0],c[3]-c[1]);
+        const ry=Math.atan2(c[2]-c[0],c[3]-c[1])-Math.PI/2;
+        [0.42,0.78].forEach(hy=>{ setInst(cR,ci++,mx,hy,mz,1,seg*1.04,1,ry,Math.PI/2); }); });
+      forestGroup.add(cR); }
     forestGroup.add(posts,rails);
     // rázcestník s čitateľnými šípkami
     const plate=(txt)=>{ const tc=document.createElement("canvas"); tc.width=256; tc.height=64;
